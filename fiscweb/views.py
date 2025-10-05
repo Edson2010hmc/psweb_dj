@@ -3,7 +3,7 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 import json
-from .models import FiscaisCad
+from .models import FiscaisCad,BarcosCad,ModalBarco
 #================================================CADASTRO FISCAIS - API REST=================================================
 @csrf_exempt
 @require_http_methods(["GET", "POST"])
@@ -155,3 +155,354 @@ def fiscais_detail(request, fiscal_id):
                 'success': False,
                 'error': str(e)
             }, status=400)
+        
+#================================================CADASTRO BARCOS - API REST=================================================
+
+# Adicionar estas funções no final do arquivo fiscweb/views.py
+
+@csrf_exempt
+@require_http_methods(["GET", "POST"])
+def barcos_list(request):
+    """
+    GET: Lista todos os barcos
+    POST: Cria um novo barco
+    """
+    
+    if request.method == 'GET':
+        try:
+            barcos = BarcosCad.objects.all().values(
+                'id', 'tipoBarco', 'nomeBarco', 'modalBarco', 
+                'emailPetr', 'dataPrimPorto', 'emprNav', 'icjEmprNav',
+                'emprServ', 'icjEmprServ', 'criado_em', 'atualizado_em'
+            )
+            barcos_list = list(barcos)
+            
+            print(f"[API] GET /barcos - Retornando {len(barcos_list)} barcos")
+            
+            return JsonResponse({
+                'success': True,
+                'data': barcos_list,
+                'count': len(barcos_list)
+            }, safe=False)
+            
+        except Exception as e:
+            print(f"[API ERROR] GET /barcos - {str(e)}")
+            return JsonResponse({
+                'success': False,
+                'error': str(e)
+            }, status=500)
+    
+    elif request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            
+            print(f"[API] POST /barcos - Criando barco: {data.get('nomeBarco')}")
+            
+            # Buscar modalSelec se informado
+            modal_selec = None
+            if data.get('modalSelec_id'):
+                try:
+                    modal_selec = ModalBarco.objects.get(id=data.get('modalSelec_id'))
+                except ModalBarco.DoesNotExist:
+                    print(f"[API ERROR] POST /barcos - Modal ID {data.get('modalSelec_id')} não encontrado")
+                    return JsonResponse({
+                        'success': False,
+                        'error': 'Modal não encontrado'
+                    }, status=400)
+            
+            barco = BarcosCad.objects.create(
+                tipoBarco=data.get('tipoBarco'),
+                nomeBarco=data.get('nomeBarco'),
+                modalSelec=modal_selec,
+                emailPetr=data.get('emailPetr'),
+                dataPrimPorto=data.get('dataPrimPorto'),
+                emprNav=data.get('emprNav'),
+                icjEmprNav=data.get('icjEmprNav'),
+                emprServ=data.get('emprServ'),
+                icjEmprServ=data.get('icjEmprServ')
+            )
+            
+            print(f"[API] POST /barcos - Barco criado com ID: {barco.id}")
+            
+            return JsonResponse({
+                'success': True,
+                'message': 'Barco criado com sucesso',
+                'data': {
+                    'id': barco.id,
+                    'tipoBarco': barco.tipoBarco,
+                    'nomeBarco': barco.nomeBarco,
+                    'modalBarco': barco.modalBarco,
+                    'emailPetr': barco.emailPetr,
+                    'dataPrimPorto': str(barco.dataPrimPorto),
+                    'emprNav': barco.emprNav,
+                    'icjEmprNav': barco.icjEmprNav,
+                    'emprServ': barco.emprServ,
+                    'icjEmprServ': barco.icjEmprServ
+                }
+            }, status=201)
+            
+        except Exception as e:
+            print(f"[API ERROR] POST /barcos - {str(e)}")
+            return JsonResponse({
+                'success': False,
+                'error': str(e)
+            }, status=400)
+
+
+@csrf_exempt
+@require_http_methods(["GET", "PUT", "DELETE"])
+def barcos_detail(request, barco_id):
+    """
+    GET: Retorna um barco específico
+    PUT: Atualiza um barco
+    DELETE: Remove um barco
+    """
+    
+    try:
+        barco = BarcosCad.objects.get(id=barco_id)
+    except BarcosCad.DoesNotExist:
+        print(f"[API ERROR] Barco ID {barco_id} não encontrado")
+        return JsonResponse({
+            'success': False,
+            'error': 'Barco não encontrado'
+        }, status=404)
+    
+    if request.method == 'GET':
+        print(f"[API] GET /barcos/{barco_id} - {barco.nomeBarco}")
+        return JsonResponse({
+            'success': True,
+            'data': {
+                'id': barco.id,
+                'tipoBarco': barco.tipoBarco,
+                'nomeBarco': barco.nomeBarco,
+                'modalBarco': barco.modalBarco,
+                'modalSelec_id': barco.modalSelec.id if barco.modalSelec else None,
+                'emailPetr': barco.emailPetr,
+                'dataPrimPorto': str(barco.dataPrimPorto),
+                'emprNav': barco.emprNav,
+                'icjEmprNav': barco.icjEmprNav,
+                'emprServ': barco.emprServ,
+                'icjEmprServ': barco.icjEmprServ,
+                'criado_em': barco.criado_em,
+                'atualizado_em': barco.atualizado_em
+            }
+        })
+    
+    elif request.method == 'PUT':
+        try:
+            data = json.loads(request.body)
+            
+            print(f"[API] PUT /barcos/{barco_id} - Atualizando: {barco.nomeBarco}")
+            
+            # Atualizar modalSelec se informado
+            if 'modalSelec_id' in data:
+                if data['modalSelec_id']:
+                    try:
+                        barco.modalSelec = ModalBarco.objects.get(id=data['modalSelec_id'])
+                    except ModalBarco.DoesNotExist:
+                        return JsonResponse({
+                            'success': False,
+                            'error': 'Modal não encontrado'
+                        }, status=400)
+                else:
+                    barco.modalSelec = None
+            
+            barco.tipoBarco = data.get('tipoBarco', barco.tipoBarco)
+            barco.nomeBarco = data.get('nomeBarco', barco.nomeBarco)
+            barco.emailPetr = data.get('emailPetr', barco.emailPetr)
+            barco.dataPrimPorto = data.get('dataPrimPorto', barco.dataPrimPorto)
+            barco.emprNav = data.get('emprNav', barco.emprNav)
+            barco.icjEmprNav = data.get('icjEmprNav', barco.icjEmprNav)
+            barco.emprServ = data.get('emprServ', barco.emprServ)
+            barco.icjEmprServ = data.get('icjEmprServ', barco.icjEmprServ)
+            barco.save()
+            
+            print(f"[API] PUT /barcos/{barco_id} - Atualizado com sucesso")
+            
+            return JsonResponse({
+                'success': True,
+                'message': 'Barco atualizado com sucesso',
+                'data': {
+                    'id': barco.id,
+                    'tipoBarco': barco.tipoBarco,
+                    'nomeBarco': barco.nomeBarco,
+                    'modalBarco': barco.modalBarco,
+                    'emailPetr': barco.emailPetr,
+                    'dataPrimPorto': str(barco.dataPrimPorto),
+                    'emprNav': barco.emprNav,
+                    'icjEmprNav': barco.icjEmprNav,
+                    'emprServ': barco.emprServ,
+                    'icjEmprServ': barco.icjEmprServ
+                }
+            })
+            
+        except Exception as e:
+            print(f"[API ERROR] PUT /barcos/{barco_id} - {str(e)}")
+            return JsonResponse({
+                'success': False,
+                'error': str(e)
+            }, status=400)
+    
+    elif request.method == 'DELETE':
+        try:
+            nome_barco = barco.nomeBarco
+            barco.delete()
+            
+            print(f"[API] DELETE /barcos/{barco_id} - Barco '{nome_barco}' removido")
+            
+            return JsonResponse({
+                'success': True,
+                'message': f'Barco {nome_barco} removido com sucesso'
+            })
+            
+        except Exception as e:
+            print(f"[API ERROR] DELETE /barcos/{barco_id} - {str(e)}")
+            return JsonResponse({
+                'success': False,
+                'error': str(e)
+            }, status=400)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
