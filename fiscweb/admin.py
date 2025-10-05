@@ -1,0 +1,29 @@
+from django.contrib import admin
+from .models import FiscaisCad,BarcosCad,ModalBarco # Seção cadastro
+from .models import PassServ, PortoTrocaTurma,PortoManutPrev,PortoAbast,PortoInspNorm,PortoInspPetr,PortoEmbEquip,PortoEmbMat,PortoDesMat,PortoMobD # Seção 1
+from .models import anocSMS #Seção 2
+from .models import inoPendContr #Seção 3
+from .models import iapo   #Seção 4 
+
+
+admin.site.register(FiscaisCad)
+admin.site.register(BarcosCad)
+admin.site.register(ModalBarco)
+  
+
+admin.site.register(PassServ)
+admin.site.register(PortoTrocaTurma)
+admin.site.register(PortoManutPrev) 
+admin.site.register(PortoAbast)
+admin.site.register(PortoInspNorm)
+admin.site.register(PortoInspPetr)
+admin.site.register(PortoEmbEquip)
+admin.site.register(PortoEmbMat)
+admin.site.register(PortoDesMat)
+admin.site.register(PortoMobD)
+
+
+admin.site.register(anocSMS)
+admin.site.register(inoPendContr)
+admin.site.register(iapo)
+
