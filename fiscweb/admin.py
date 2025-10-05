@@ -3,7 +3,7 @@ from .models import FiscaisCad,BarcosCad,ModalBarco # Seção cadastro
 from .models import PassServ, PortoTrocaTurma,PortoManutPrev,PortoAbast,PortoInspNorm,PortoInspPetr,PortoEmbEquip,PortoEmbMat,PortoDesMat,PortoMobD # Seção 1
 from .models import anocSMS #Seção 2
 from .models import inoPendContr #Seção 3
-from .models import iapo   #Seção 4 
+from .models import iapo, smsLvMang,smsLvSeg
 
 
 admin.site.register(FiscaisCad)
@@ -26,4 +26,6 @@ admin.site.register(PortoMobD)
 admin.site.register(anocSMS)
 admin.site.register(inoPendContr)
 admin.site.register(iapo)
+admin.site.register(smsLvMang)
+admin.site.register(smsLvSeg)
 
