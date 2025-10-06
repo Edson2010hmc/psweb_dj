@@ -4,6 +4,12 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 import json
 from .models import FiscaisCad,BarcosCad,ModalBarco
+
+
+def index(request):
+    """Renderiza a página principal"""
+    return render(request, 'index.html')
+
 #================================================CADASTRO FISCAIS - API REST=================================================
 @csrf_exempt
 @require_http_methods(["GET", "POST"])
