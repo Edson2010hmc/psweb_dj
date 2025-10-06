@@ -122,6 +122,10 @@ class BarcosCad(models.Model):
 class PassServ(models.Model):
     """Modelo para cadastro de Passagem de Serviço"""
 
+    STATUS_CHOICES = [
+        ('RASCUNHO', 'RASCUNHO'),
+        ('FINALIZADA', 'FINALIZADA'),
+    ]
      
     numPS = models.IntegerField(verbose_name='Numero da PS')
     anoPS=models.CharField(max_length=5,verbose_name='Ano da PS')
@@ -130,7 +134,7 @@ class PassServ(models.Model):
     dataEmissaoPS = models.DateField(verbose_name='Data de Emissao',default='2025-01-01')
     TipoBarco = models.CharField(max_length=6,verbose_name='Barco')
     BarcoPS = models.CharField(max_length=30,verbose_name='Barco')
-    statusPS = models.CharField(max_length=12,verbose_name='Status da PS')
+    statusPS = models.CharField(max_length=12,choices=STATUS_CHOICES,default='RASCUNHO',verbose_name='Status da PS')
     fiscalEmb = models.CharField(max_length=30,verbose_name='Fiscal Embarcando')
     fiscalDes = models.CharField(max_length=30,verbose_name='Fiscal Desembarcando')
     

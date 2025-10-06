@@ -53,7 +53,7 @@ main { padding:12px; }
 .modal-content .msg { margin-top:6px; color:#b33; font-size:12px; }
 .msg-erro {margin-left: 10px;color: #b33;   /* vermelho escuro */font-size: 13px; font-weight: bold;}
 .msg-prof {margin-left: 10px;color: rgb(9, 110, 26); font-size: 16px; font-weight: bold;}
-.modalNovaPS #selEmbNova { width: 100%; padding: 8px; border: 1px solid #034709; border-radius:6px;font-size: 16px;}
+#selEmbNova { width: 100%; padding: 8px; border: 1px solid #034709; border-radius:6px; font-size: 16px; }
 .nowrap { display:inline-flex; align-items:left; gap:4px; white-space:nowrap; }
 .ps-info {
   display: flex;

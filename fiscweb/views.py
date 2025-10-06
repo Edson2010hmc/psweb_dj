@@ -3,7 +3,7 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 import json
-from .models import FiscaisCad,BarcosCad,ModalBarco
+from .models import FiscaisCad,BarcosCad,ModalBarco,PassServ
 
 #===============================================RENDERIZA TELA PRINCIPAL=================================================
 def index(request):
@@ -252,6 +252,31 @@ def fiscais_detail(request, fiscal_id):
             }, status=400)
         
 
+#================================================CADASTRO FISCAIS - API REST - USUARIOS COM PERFIL DE FISCAL=================================================
+@csrf_exempt
+@require_http_methods(["GET"])
+def fiscais_perfil_fiscal(request):
+    """
+    Retorna fiscais que possuem perfFisc=True
+    """
+    try:
+        fiscais = FiscaisCad.objects.filter(perfFisc=True).values(
+            'id', 'chave', 'nome'
+        )
+        fiscais_list = list(fiscais)
+        
+        return JsonResponse({
+            'success': True,
+            'data': fiscais_list
+        })
+        
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=500)
+
+
 
 #================================================CADASTRO BARCOS - API REST=================================================
 @csrf_exempt
@@ -457,16 +482,7 @@ def barcos_detail(request, barco_id):
 
 
 
-
-
-
-
-
-
-
-
 #================================================ENDPOINTS DE CHOICES E LISTAS=================================================
-
 @csrf_exempt
 @require_http_methods(["GET"])
 def barcos_tipos(request):
@@ -489,7 +505,6 @@ def barcos_tipos(request):
             'success': False,
             'error': str(e)
         }, status=500)
-
 
 @csrf_exempt
 @require_http_methods(["GET"])
@@ -514,20 +529,273 @@ def modais_list(request):
 
 
 
+#================================================PASSAGEM DE SERVIÇO - API REST - VERIFICA RASCUNHO USUARIO=================================================
+@csrf_exempt
+@require_http_methods(["POST"])
+def verificar_rascunho(request):
+    """
+    Verifica se existe PS em RASCUNHO para o fiscal logado
+    """
+    try:
+        data = json.loads(request.body)
+        fiscal_nome = data.get('fiscalNome', '').strip()
+        
+        if not fiscal_nome:
+            return JsonResponse({
+                'success': False,
+                'error': 'Nome do fiscal não fornecido'
+            }, status=400)
+        
+        # Buscar PS em RASCUNHO para o fiscal desembarcando
+        ps_rascunho = PassServ.objects.filter(
+            fiscalDes=fiscal_nome,
+            statusPS='RASCUNHO'
+        ).first()
+        
+        return JsonResponse({
+            'success': True,
+            'existeRascunho': ps_rascunho is not None
+        })
+        
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=500)
+
+#================================================PASSAGEM DE SERVIÇO - API REST - VERIFICA RASCUNHO EMBARCAÇÃO=================================================
+@csrf_exempt
+@require_http_methods(["POST"])
+def verificar_rascunho_embarcacao(request):
+    """
+    Verifica se existe PS em RASCUNHO para uma embarcação específica
+    Retorna dados do fiscal que criou se existir
+    """
+    try:
+        data = json.loads(request.body)
+        barco_id = data.get('barcoId')
+        fiscal_nome = data.get('fiscalNome', '').strip()
+        
+        if not barco_id:
+            return JsonResponse({
+                'success': False,
+                'error': 'ID da embarcação não fornecido'
+            }, status=400)
+        
+        # Buscar embarcação
+        try:
+            barco = BarcosCad.objects.get(id=barco_id)
+        except BarcosCad.DoesNotExist:
+            return JsonResponse({
+                'success': False,
+                'error': 'Embarcação não encontrada'
+            }, status=404)
+        
+        # Buscar PS em RASCUNHO para essa embarcação
+        barco_nome = f"{barco.tipoBarco} - {barco.nomeBarco}"
+        ps_rascunho = PassServ.objects.filter(
+            BarcoPS=barco_nome,
+            statusPS='RASCUNHO'
+        ).exclude(fiscalDes=fiscal_nome).first()
+        
+        if ps_rascunho:
+            return JsonResponse({
+                'success': True,
+                'existeRascunho': True,
+                'barcoNome': barco_nome,
+                'fiscalNome': ps_rascunho.fiscalDes
+            })
+        
+        return JsonResponse({
+            'success': True,
+            'existeRascunho': False
+        })
+        
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=500)
 
 
+#================================================PASSAGEM DE SERVIÇO - API REST - CRIA NOVA PS=================================================
+@csrf_exempt
+@require_http_methods(["POST"])
+def criar_nova_ps(request):
+    """
+    Cria uma nova PS em modo RASCUNHO
+    """
+    try:
+        data = json.loads(request.body)
+        
+        barco_id = data.get('barcoId')
+        fiscal_des_nome = data.get('fiscalDesNome')
+        fiscal_emb_id = data.get('fiscalEmbId')
+        numero = data.get('numero')
+        ano = data.get('ano')
+        data_inicio = data.get('dataInicio')
+        data_fim = data.get('dataFim')
+        data_emissao = data.get('dataEmissao')
+        
+        # Buscar embarcação
+        barco = BarcosCad.objects.get(id=barco_id)
+        
+        # Buscar fiscal embarcando
+        fiscal_emb_nome = ''
+        if fiscal_emb_id:
+            fiscal_emb = FiscaisCad.objects.get(id=fiscal_emb_id)
+            fiscal_emb_nome = f"{fiscal_emb.chave} - {fiscal_emb.nome}"
+        
+        # Criar PS
+        ps = PassServ.objects.create(
+            numPS=numero,
+            anoPS=str(ano),
+            dataInicio=data_inicio,
+            dataFim=data_fim,
+            dataEmissaoPS=data_emissao,
+            TipoBarco=barco.tipoBarco,
+            BarcoPS=f"{barco.tipoBarco} - {barco.nomeBarco}",
+            statusPS='RASCUNHO',
+            fiscalEmb=fiscal_emb_nome,
+            fiscalDes=fiscal_des_nome
+        )
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'PS criada com sucesso',
+            'data': {
+                'id': ps.id,
+                'numPS': ps.numPS,
+                'anoPS': ps.anoPS,
+                'BarcoPS': ps.BarcoPS,
+                'dataInicio': str(ps.dataInicio),
+                'dataFim': str(ps.dataFim),
+                'dataEmissaoPS': str(ps.dataEmissaoPS),
+                'statusPS': ps.statusPS,
+                'fiscalEmb': ps.fiscalEmb,
+                'fiscalDes': ps.fiscalDes
+            }
+        }, status=201)
+        
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=400)
 
-
-
-
-
-
-
-
-
-
-
-
+#================================================PASSAGEM DE SERVIÇO - API REST - DETALHES PS=================================================
+@csrf_exempt
+@require_http_methods(["GET", "DELETE"])
+def passagem_detail(request, ps_id):
+    """
+    GET: Retorna detalhes de uma PS específica
+    DELETE: Remove uma PS
+    """
+    try:
+        ps = PassServ.objects.get(id=ps_id)
+        
+        if request.method == 'GET':
+            return JsonResponse({
+                'success': True,
+                'data': {
+                    'id': ps.id,
+                    'numPS': ps.numPS,
+                    'anoPS': ps.anoPS,
+                    'dataInicio': str(ps.dataInicio),
+                    'dataFim': str(ps.dataFim),
+                    'dataEmissaoPS': str(ps.dataEmissaoPS),
+                    'TipoBarco': ps.TipoBarco,
+                    'BarcoPS': ps.BarcoPS,
+                    'statusPS': ps.statusPS,
+                    'fiscalEmb': ps.fiscalEmb,
+                    'fiscalDes': ps.fiscalDes
+                }
+            })
+        
+        elif request.method == 'DELETE':
+            ps.delete()
+            return JsonResponse({
+                'success': True,
+                'message': 'PS excluída com sucesso'
+            })
+        
+    except PassServ.DoesNotExist:
+        return JsonResponse({
+            'success': False,
+            'error': 'PS não encontrada'
+        }, status=404)
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=500)
+    """
+    Retorna detalhes de uma PS específica
+    """
+    try:
+        ps = PassServ.objects.get(id=ps_id)
+        
+        return JsonResponse({
+            'success': True,
+            'data': {
+                'id': ps.id,
+                'numPS': ps.numPS,
+                'anoPS': ps.anoPS,
+                'dataInicio': str(ps.dataInicio),
+                'dataFim': str(ps.dataFim),
+                'dataEmissaoPS': str(ps.dataEmissaoPS),
+                'TipoBarco': ps.TipoBarco,
+                'BarcoPS': ps.BarcoPS,
+                'statusPS': ps.statusPS,
+                'fiscalEmb': ps.fiscalEmb,
+                'fiscalDes': ps.fiscalDes
+            }
+        })
+        
+    except PassServ.DoesNotExist:
+        return JsonResponse({
+            'success': False,
+            'error': 'PS não encontrada'
+        }, status=404)
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=500)
+    
+#================================================PASSAGEM DE SERVIÇO - API REST - LISTA PS USUÁRIO=================================================
+@csrf_exempt
+@require_http_methods(["GET"])
+def listar_passagens_usuario(request):
+    """
+    Lista todas as PS do usuário logado
+    """
+    try:
+        fiscal_nome = request.GET.get('fiscalNome', '').strip()
+        
+        if not fiscal_nome:
+            return JsonResponse({
+                'success': False,
+                'error': 'Nome do fiscal não fornecido'
+            }, status=400)
+        
+        passagens = PassServ.objects.filter(
+            fiscalDes=fiscal_nome
+        ).order_by('-dataEmissaoPS').values(
+            'id', 'numPS', 'anoPS', 'BarcoPS', 
+            'dataInicio', 'dataFim', 'dataEmissaoPS', 'statusPS'
+        )
+        
+        return JsonResponse({
+            'success': True,
+            'data': list(passagens)
+        })
+        
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=500)
 
 
 

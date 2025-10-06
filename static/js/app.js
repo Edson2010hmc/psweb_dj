@@ -23,6 +23,7 @@
     t.textContent = '▼';
   });
     inicializarModulos();
+    configurarModalNovaPS();
   }
 
   // ===== CONFIGURAR NAVEGAÇÃO ENTRE TABS PRINCIPAIS =====
@@ -84,7 +85,7 @@
       });
     });
   }
-
+// ===== CONFIGURAR ACORDION DA TELA DE CADASTRO =====
 function configurarAccordion() {
   const headers = document.querySelectorAll('.accordion-header');
   
@@ -117,6 +118,131 @@ function configurarAccordion() {
     });
   });
 }
+
+
+// ===== CONFIGURAR MODAL NOVA PS ======================================
+function configurarModalNovaPS() {
+  // Funções auxiliares para controlar botões
+  function desabilitarBotoesMenu() {
+    document.querySelectorAll('.tablink').forEach(btn => btn.disabled = true);
+  }
+
+  function habilitarBotoesMenu() {
+    document.querySelectorAll('.tablink').forEach(btn => btn.disabled = false);
+  }
+  const btnNova = document.getElementById('btnNova');
+  const modal = document.getElementById('modalNovaPS');
+  const btnCancelar = document.getElementById('btnModalNovaCancelar');
+  const btnConfirmar = document.getElementById('btnModalNovaConfirmar');
+  const selectEmb = document.getElementById('selEmbNova');
+  const msgNovaPS = document.getElementById('msgNovaPS');
+  const msgModal = document.getElementById('msgModalNovaPS');
+  
+  // Ao clicar em Nova PS
+  btnNova.addEventListener('click', async function() {
+    // Obter fiscal logado
+    const usuario = AuthModule.getUsuarioLogado();
+    if (!usuario) {
+      alert('Usuário não identificado');
+      return;
+    }
+    
+    // Verificar se existe rascunho
+    try {
+      const response = await fetch('/api/verificar-rascunho/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fiscalNome: `${usuario.chave} - ${usuario.nome}` })
+      });
+      
+      const result = await response.json();
+      
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+      
+      if (result.existeRascunho) {
+        // Mostrar mensagem por 8 segundos
+        msgNovaPS.textContent = 'Já existe uma PS em modo rascunho para o usuário';
+        setTimeout(() => {
+          msgNovaPS.textContent = '';
+        }, 8000);
+        return;
+      }
+      
+      // Não existe rascunho - abrir modal
+      carregarEmbarcacoesModal();
+      modal.classList.remove('hidden');
+      desabilitarBotoesMenu();
+      
+    } catch (error) {
+      alert('Erro ao verificar rascunho: ' + error.message);
+    }
+  });
+  
+  // Cancelar modal
+  btnCancelar.addEventListener('click', function() {
+    modal.classList.add('hidden');
+    habilitarBotoesMenu();
+    selectEmb.value = '';
+    msgModal.textContent = '';
+    btnConfirmar.disabled = true;
+  });
+  
+  // Habilitar confirmar quando selecionar embarcação
+  selectEmb.addEventListener('change', function() {
+    btnConfirmar.disabled = !this.value;
+  });
+  
+// Confirmar seleção
+  btnConfirmar.addEventListener('click', function() {
+    const embarcacaoId = selectEmb.value;
+    
+    if (!embarcacaoId) {
+      alert('ESCOLHA A EMBARCAÇÃO PARA INICIAR A PASSAGEM DE SERVIÇO');
+      return;
+    }
+    
+    // Obter dados da embarcação selecionada
+    const selectedOption = selectEmb.selectedOptions[0];
+    const barcoData = JSON.parse(selectedOption.dataset.barco);
+    
+    // Chamar módulo de passagens
+    if (typeof PassagensModule !== 'undefined' && PassagensModule.criarNovaPS) {
+      PassagensModule.criarNovaPS(embarcacaoId, barcoData);
+    }
+  });
+}
+
+// ===== CARREGAR EMBARCAÇÕES NO MODAL =====
+async function carregarEmbarcacoesModal() {
+  try {
+    const response = await fetch('/api/barcos/');
+    const result = await response.json();
+    
+    if (!result.success) {
+      throw new Error(result.error);
+    }
+    
+    const selectEmb = document.getElementById('selEmbNova');
+    selectEmb.innerHTML = '<option value="">— selecione —</option>';
+    
+    result.data.forEach(barco => {
+      const option = document.createElement('option');
+      option.value = barco.id;
+      option.textContent = `${barco.tipoBarco} - ${barco.nomeBarco}`;
+      option.dataset.barco = JSON.stringify(barco);
+      selectEmb.appendChild(option);
+    });
+    
+  } catch (error) {
+    alert('Erro ao carregar embarcações: ' + error.message);
+  }
+}
+
+
+
+
 
   // ===== INICIALIZAR MÓDULOS EXISTENTES =====
   function inicializarModulos() {
