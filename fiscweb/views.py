@@ -17,6 +17,7 @@ def fiscais_list(request):
         try:
             fiscais = FiscaisCad.objects.all().values(
                 'id', 'chave', 'nome', 'email', 'celular', 
+                'perfFisc', 'perfAdm',
                 'criado_em', 'atualizado_em'
             )
             fiscais_list = list(fiscais)
@@ -46,7 +47,9 @@ def fiscais_list(request):
                 chave=data.get('chave'),
                 nome=data.get('nome'),
                 email=data.get('email'),
-                celular=data.get('celular', '')
+                celular=data.get('celular', ''),
+                perfFisc=data.get('perfFisc', False),
+                perfAdm=data.get('perfAdm', False)
             )
             
             print(f"[API] POST /fiscais - Fiscal criado com ID: {fiscal.id}")
@@ -59,7 +62,9 @@ def fiscais_list(request):
                     'chave': fiscal.chave,
                     'nome': fiscal.nome,
                     'email': fiscal.email,
-                    'celular': fiscal.celular
+                    'celular': fiscal.celular,
+                    'perfFisc': fiscal.perfFisc,
+                    'perfAdm': fiscal.perfAdm
                 }
             }, status=201)
             
@@ -69,7 +74,6 @@ def fiscais_list(request):
                 'success': False,
                 'error': str(e)
             }, status=400)
-
 
 @csrf_exempt
 @require_http_methods(["GET", "PUT", "DELETE"])
@@ -99,6 +103,8 @@ def fiscais_detail(request, fiscal_id):
                 'nome': fiscal.nome,
                 'email': fiscal.email,
                 'celular': fiscal.celular,
+                'perfFisc': fiscal.perfFisc,
+                'perfAdm': fiscal.perfAdm,
                 'criado_em': fiscal.criado_em,
                 'atualizado_em': fiscal.atualizado_em
             }
@@ -114,6 +120,8 @@ def fiscais_detail(request, fiscal_id):
             fiscal.nome = data.get('nome', fiscal.nome)
             fiscal.email = data.get('email', fiscal.email)
             fiscal.celular = data.get('celular', fiscal.celular)
+            fiscal.perfFisc = data.get('perfFisc', fiscal.perfFisc)
+            fiscal.perfAdm = data.get('perfAdm', fiscal.perfAdm)
             fiscal.save()
             
             print(f"[API] PUT /fiscais/{fiscal_id} - Atualizado com sucesso")
@@ -126,7 +134,9 @@ def fiscais_detail(request, fiscal_id):
                     'chave': fiscal.chave,
                     'nome': fiscal.nome,
                     'email': fiscal.email,
-                    'celular': fiscal.celular
+                    'celular': fiscal.celular,
+                    'perfFisc': fiscal.perfFisc,
+                    'perfAdm': fiscal.perfAdm
                 }
             })
             
@@ -156,10 +166,9 @@ def fiscais_detail(request, fiscal_id):
                 'error': str(e)
             }, status=400)
         
+
+
 #================================================CADASTRO BARCOS - API REST=================================================
-
-# Adicionar estas funções no final do arquivo fiscweb/views.py
-
 @csrf_exempt
 @require_http_methods(["GET", "POST"])
 def barcos_list(request):
@@ -247,7 +256,6 @@ def barcos_list(request):
                 'success': False,
                 'error': str(e)
             }, status=400)
-
 
 @csrf_exempt
 @require_http_methods(["GET", "PUT", "DELETE"])
