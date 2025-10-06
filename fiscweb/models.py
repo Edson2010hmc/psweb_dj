@@ -32,8 +32,7 @@ def caminho_PS(instance, filename):
         nome_arquivo = f"{num_ps} - {data_formatada} - {nome_original}{extensao}"
         
         return f"storage/PS/{barco}/{ano}/{folder}/{nome_arquivo}"
-
-
+ 
 #================================================TABELAS DE APOIO - MODELO MODAL BARCO==============================================#
 class ModalBarco(models.Model):
     """Modelo para cadastro de Modais de barcos """
@@ -62,7 +61,8 @@ class FiscaisCad(models.Model):
     nome = models.CharField(max_length=80, verbose_name='Nome')
     email = models.EmailField(max_length=40, verbose_name='E-mail')
     celular = models.CharField(max_length=15,validators=[celular_validator],blank=True,verbose_name='Celular' )
-    # Campos automáticos
+    perfFisc = models.BooleanField(default=False, verbose_name='Perfil Fiscal?')
+    perfAdm = models.BooleanField(default=False, verbose_name='Perfil ADM?')    
     criado_em = models.DateTimeField(auto_now_add=True)
     atualizado_em = models.DateTimeField(auto_now=True)
     
@@ -80,10 +80,10 @@ class BarcosCad(models.Model):
     """Modelo para cadastro de embarcações"""
     
     barcoTipoChoice =   [
-                        ('rsv'   , 'RSV'),
-                        ('sdsv'  , 'SDSV'),
-                        ('dsv'   , 'DSV'),
-                        ('tup'   , 'TUP'),
+                        ('RSV' , 'RSV'),
+                        ('SDSV', 'SDSV'),
+                        ('DSV' , 'DSV'),
+                        ('TUP' , 'TUP'),
                                           ]
            
     tipoBarco = models.CharField(max_length=6,choices=barcoTipoChoice, verbose_name='Tipo')
