@@ -382,12 +382,26 @@
     <!---------------ADM EMBARCAÇÕES-------------------------------------------------------------------------------------------------------->
     <div class="card fadein">
       <h3>Embarcações</h3>
-        <div class="col"><label>Tipo</label><input id="cad_e_tipo" type="text" style="width:200px"></div>
+        <div class="col">
+            <label>Tipo</label>
+            <select id="cad_e_tipo" style="width:200px">
+              <option value="">— selecione —</option>
+            </select>
+          </div>
 
         <div class="col"><label>Nome</label><input id="cad_e_nome" type="text" style="width:400px"></div>
-
+        <div class="col">
+            <label>Modal</label>
+            <select id="cad_e_modal" style="width:200px">
+              <option value="">— selecione —</option>
+            </select>
+        </div>
         <div class="col"><label>Primeiro Porto</label><input id="cad_e_primeira" type="date" placeholder="dd/mm/aaaa" style="width:200px"></div>
-     
+        <div class="col"><label>E-mail Petrobras</label><input id="cad_e_email" type="email" style="width:300px"></div>
+        <div class="col"><label>Empresa Navegação</label><input id="cad_e_emprNav" type="text" style="width:300px"></div>
+        <div class="col"><label>ICJ Empresa Navegação</label><input id="cad_e_icjEmprNav" type="text" maxlength="20" style="width:200px"></div>
+        <div class="col"><label>Empresa Serviço</label><input id="cad_e_emprServ" type="text" style="width:300px"></div>
+        <div class="col"><label>ICJ Empresa Serviço</label><input id="cad_e_icjEmprServ" type="text" maxlength="20" style="width:200px"></div>
   <div class="row" style="align-items:flex-end; gap:8px; margin-top:8px">   
   <div class="col" style="min-width:300px">
             <label>Embarcações cadastradas</label>

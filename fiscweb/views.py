@@ -380,6 +380,61 @@ def barcos_detail(request, barco_id):
 
 
 
+#================================================ENDPOINTS DE CHOICES E LISTAS=================================================
+
+@csrf_exempt
+@require_http_methods(["GET"])
+def barcos_tipos(request):
+    """
+    GET: Retorna as choices de tipos de barcos
+    """
+    try:
+        tipos = [
+            {'value': choice[0], 'label': choice[1]} 
+            for choice in BarcosCad.barcoTipoChoice
+        ]
+        
+        return JsonResponse({
+            'success': True,
+            'data': tipos
+        })
+        
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=500)
+
+
+@csrf_exempt
+@require_http_methods(["GET"])
+def modais_list(request):
+    """
+    GET: Retorna lista de modais cadastrados
+    """
+    try:
+        modais = ModalBarco.objects.all().values('id', 'modal')
+        modais_list = list(modais)
+        
+        return JsonResponse({
+            'success': True,
+            'data': modais_list
+        })
+        
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=500)
+
+
+
+
+
+
+
+
+
 
 
 
