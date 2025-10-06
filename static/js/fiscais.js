@@ -88,7 +88,7 @@ const FiscaisModule = (() => {
       });
 
     } catch (error) {
-      alert('Erro ao carregar fiscais: ' + error.message);
+      alert('Erro ao carregar usuarios: ' + error.message);
     }
   }
 
@@ -113,7 +113,7 @@ const FiscaisModule = (() => {
         throw new Error(result.error);
       }
 
-      alert('Fiscal cadastrado com sucesso!');
+      alert('Usuario cadastrado com sucesso!');
       
       limparFormulario();
       carregarLista();
@@ -124,7 +124,7 @@ const FiscaisModule = (() => {
       elementos.btnExcluir.disabled = true;
 
     } catch (error) {
-      alert('Erro ao salvar fiscal: ' + error.message);
+      alert('Erro ao salvar usuario: ' + error.message);
     }
   }
 
@@ -155,7 +155,7 @@ const FiscaisModule = (() => {
     const selectedOption = elementos.lista.selectedOptions[0];
     
     if (!selectedOption || !selectedOption.value) {
-      alert('Selecione um fiscal para editar');
+      alert('Selecione um usuario para editar');
       return;
     }
 
@@ -194,7 +194,7 @@ const FiscaisModule = (() => {
         throw new Error(result.error);
       }
 
-      alert('Fiscal atualizado com sucesso!');
+      alert('Usuario atualizado com sucesso!');
       
       // Sair do modo edição
       modoEdicao = false;
@@ -213,7 +213,7 @@ const FiscaisModule = (() => {
       elementos.btnExcluir.disabled = true;
 
     } catch (error) {
-      alert('Erro ao atualizar fiscal: ' + error.message);
+      alert('Erro ao atualizar usuario: ' + error.message);
     }
   }
 
@@ -240,7 +240,7 @@ const FiscaisModule = (() => {
     const selectedOption = elementos.lista.selectedOptions[0];
     
     if (!selectedOption || !selectedOption.value) {
-      alert('Selecione um fiscal para excluir');
+      alert('Selecione um usuario para excluir');
       return;
     }
 
@@ -250,7 +250,7 @@ const FiscaisModule = (() => {
 
     const fiscal = JSON.parse(selectedOption.dataset.fiscal);
     
-    if (!confirm(`Confirma exclusão do fiscal "${fiscal.nome}"?`)) {
+    if (!confirm(`Confirma exclusão do usuario "${fiscal.nome}"?`)) {
       // Não confirmou - limpa e Salvar fica HABILITADO
       limparFormulario();
       elementos.lista.value = '';
@@ -272,7 +272,7 @@ const FiscaisModule = (() => {
         throw new Error(result.error);
       }
 
-      alert('Fiscal excluído com sucesso!');
+      alert('Usuario excluído com sucesso!');
       
       carregarLista();
       limparFormulario();
@@ -283,7 +283,7 @@ const FiscaisModule = (() => {
       elementos.btnExcluir.disabled = true;
 
     } catch (error) {
-      alert('Erro ao excluir fiscal: ' + error.message);
+      alert('Erro ao excluir usuario: ' + error.message);
       
       // Em caso de erro, Salvar HABILITADO
       limparFormulario();

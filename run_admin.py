@@ -89,7 +89,7 @@ class DjangoApp:
         
         # Configurações da janela
         window_config = {
-            'title': 'Sistema de Vendas - Django',
+            'title': 'PSWeb',
             'url': self.django_url,
             'width': 1200,
             'height': 800,

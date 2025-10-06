@@ -265,7 +265,7 @@ def barcos_list(request):
     if request.method == 'GET':
         try:
             barcos = BarcosCad.objects.all().values(
-                'id', 'tipoBarco', 'nomeBarco', 'modalBarco', 
+                'id', 'tipoBarco', 'nomeBarco', 'modalBarco', 'modalSelec_id',
                 'emailPetr', 'dataPrimPorto', 'emprNav', 'icjEmprNav',
                 'emprServ', 'icjEmprServ', 'criado_em', 'atualizado_em'
             )
