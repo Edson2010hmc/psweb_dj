@@ -14,6 +14,7 @@
     }
     configurarNavegacaoTabs();
     configurarNavegacaoSubtabs();
+    configurarAccordion();
     inicializarModulos();
   }
 
@@ -41,6 +42,10 @@
         if (targetSection) {
           targetSection.classList.add('active');
         }
+        if (targetTab === 'cadastros') {
+          reiniciarCadastros();
+        }
+
       });
     });
   }
@@ -73,6 +78,33 @@
     });
   }
 
+  // ===== CONFIGURAR ACCORDION =========================================
+  function configurarAccordion() {
+    const headers = document.querySelectorAll('.accordion-header');
+    
+    headers.forEach(header => {
+      header.addEventListener('click', function() {
+        const target = this.getAttribute('data-target');
+        const content = document.getElementById(`acc-${target}`);
+        const toggle = this.querySelector('.toggle');
+        
+        // Fecha todos os conteúdos
+        document.querySelectorAll('.accordion-content').forEach(c => {
+          c.classList.remove('active');
+        });
+        
+        // Reset todos os toggles
+        document.querySelectorAll('.accordion-header .toggle').forEach(t => {
+          t.textContent = '▼';
+        });
+        
+        // Abre o clicado
+        content.classList.add('active');
+        toggle.textContent = '▲';
+      });
+    });
+  }
+
   // ===== INICIALIZAR MÓDULOS EXISTENTES =====
   function inicializarModulos() {
     // Inicializar módulo de Fiscais
@@ -85,6 +117,23 @@
       EmbarcacoesModule.init();
     }
   }
+
+// ===== REINICIAR FORMULÁRIOS DE CADASTROS =====
+  function reiniciarCadastros() {
+    // Reinicia formulário de Fiscais
+    if (typeof FiscaisModule !== 'undefined' && FiscaisModule.reiniciar) {
+      FiscaisModule.reiniciar();
+    }
+
+    // Reinicia formulário de Embarcações
+    if (typeof EmbarcacoesModule !== 'undefined' && EmbarcacoesModule.reiniciar) {
+      EmbarcacoesModule.reiniciar();
+    }
+  }
+
+
+
+
 
   // ===== EXECUTAR QUANDO DOM CARREGAR =====
   if (document.readyState === 'loading') {

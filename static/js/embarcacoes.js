@@ -437,10 +437,26 @@ const EmbarcacoesModule = (() => {
     elementos.icjEmprServ.disabled = !habilitar;
   }
 
+   // ===== REINICIAR FORMULÁRIO =====
+  function reiniciar() {
+    limparFormulario();
+    elementos.lista.value = '';
+    elementos.btnSalvar.disabled = true;
+    elementos.btnEditar.disabled = true;
+    elementos.btnExcluir.disabled = true;
+    elementos.editActions.style.display = 'none';
+    elementos.btnSalvar.style.display = 'inline-block';
+    elementos.btnExcluir.style.display = 'inline-block';
+    elementos.lista.disabled = false;
+    modoEdicao = false;
+    embarcacaoEditandoId = null;
+  }
+
   // ===== EXPORTAR FUNÇÕES PÚBLICAS =====
   return {
     init,
-    carregarLista
+    carregarLista,
+    reiniciar  // ADICIONAR AQUI
   };
 })();
 
