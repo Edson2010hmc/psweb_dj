@@ -15,6 +15,13 @@
     configurarNavegacaoTabs();
     configurarNavegacaoSubtabs();
     configurarAccordion();
+    // Fecha todos os accordions ao iniciar
+  document.querySelectorAll('.accordion-content').forEach(c => {
+    c.classList.remove('active');
+  });
+  document.querySelectorAll('.accordion-header .toggle').forEach(t => {
+    t.textContent = '▼';
+  });
     inicializarModulos();
   }
 
@@ -78,32 +85,38 @@
     });
   }
 
-  // ===== CONFIGURAR ACCORDION =========================================
-  function configurarAccordion() {
-    const headers = document.querySelectorAll('.accordion-header');
-    
-    headers.forEach(header => {
-      header.addEventListener('click', function() {
-        const target = this.getAttribute('data-target');
-        const content = document.getElementById(`acc-${target}`);
-        const toggle = this.querySelector('.toggle');
-        
-        // Fecha todos os conteúdos
-        document.querySelectorAll('.accordion-content').forEach(c => {
-          c.classList.remove('active');
-        });
-        
-        // Reset todos os toggles
-        document.querySelectorAll('.accordion-header .toggle').forEach(t => {
-          t.textContent = '▼';
-        });
-        
-        // Abre o clicado
-        content.classList.add('active');
-        toggle.textContent = '▲';
+function configurarAccordion() {
+  const headers = document.querySelectorAll('.accordion-header');
+  
+  headers.forEach(header => {
+    header.addEventListener('click', function() {
+      const target = this.getAttribute('data-target');
+      const content = document.getElementById(`acc-${target}`);
+      const toggle = this.querySelector('.toggle');
+      
+      // Se já está aberto, fecha
+      if (content.classList.contains('active')) {
+        content.classList.remove('active');
+        toggle.textContent = '▼';
+        return;
+      }
+      
+      // Fecha todos os conteúdos
+      document.querySelectorAll('.accordion-content').forEach(c => {
+        c.classList.remove('active');
       });
+      
+      // Reset todos os toggles
+      document.querySelectorAll('.accordion-header .toggle').forEach(t => {
+        t.textContent = '▼';
+      });
+      
+      // Abre o clicado
+      content.classList.add('active');
+      toggle.textContent = '▲';
     });
-  }
+  });
+}
 
   // ===== INICIALIZAR MÓDULOS EXISTENTES =====
   function inicializarModulos() {
@@ -129,6 +142,12 @@
     if (typeof EmbarcacoesModule !== 'undefined' && EmbarcacoesModule.reiniciar) {
       EmbarcacoesModule.reiniciar();
     }
+     document.querySelectorAll('.accordion-content').forEach(c => {
+    c.classList.remove('active');
+  });
+  document.querySelectorAll('.accordion-header .toggle').forEach(t => {
+    t.textContent = '▼';
+  });
   }
 
 
