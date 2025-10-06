@@ -349,10 +349,18 @@
             
         <div class="col"><label>Chave</label><input id="cad_f_ch" type="text" maxlength="4" style="width:80px"></div>
         <div class="col"><label>Nome</label><input id="cad_f_nome" type="text" style="width:400px"></div>
-        <div class="col"><label>Contato</label><input id="cad_f_tel" type="text" maxlength="15" style="width:180px"></div>
-        
-        <div class="row" style="align-items:flex-end; gap:8px; margin-top:8px">
-  <div class="col" style="min-width:300px">
+        <div class="col"><label>Telefone</label><input id="cad_f_tel" type="text" maxlength="15" style="width:180px"></div>
+        <div class="col"><label>E-mail</label><input id="cad_f_email" type="email" style="width:300px"></div>
+        <div class="col" style="display:flex; gap:16px; align-items:center; margin-top:8px">
+          <label style="display:inline-flex; align-items:center; gap:6px">
+            <input id="cad_f_perfFisc" type="checkbox"> Perfil Fiscal
+          </label>
+          <label style="display:inline-flex; align-items:center; gap:6px">
+            <input id="cad_f_perfAdm" type="checkbox"> Perfil ADM
+          </label>
+        </div>
+    <div class="row" style="align-items:flex-end; gap:8px; margin-top:8px">
+    <div class="col" style="min-width:300px">
     <label>Fiscais cadastrados</label>
     <select id="cad_f_list">
       <option value="">— selecione —</option>
@@ -398,33 +406,6 @@
   </div>
   </div>
   </div>
-
-  <div class="card fadein">
-      <h3>Administradores do Sistema</h3>
-            
-        <div class="col"><label>Chave</label><input id="cad_adm_ch" type="text" maxlength="4" style="width:80px"></div>
-        <div class="col"><label>Nome</label><input id="cad_adm_nome" type="text" style="width:400px"></div>
-        <div class="col"><label>Contato</label><input id="cad_adm_tel" type="text" maxlength="15" style="width:180px"></div>
-        
-        <div class="row" style="align-items:flex-end; gap:8px; margin-top:8px">
-  <div class="col" style="min-width:300px">
-    <label>Administradores cadastrados</label>
-    <select id="cad_adm_list">
-      <option value="">— selecione —</option>
-      
-    </select>
-  </div>
-  <div class="col" style="flex:0 0 auto; display:flex; gap:8px">
-    <button id="btnSaveAdm"    class="btn ghost" >Salvar</button>
-    <button id="btnAdmEditar"  class="btn ghost" disabled>Editar</button>
-    <button id="btnAdmlExcluir" class="btn ghost" disabled>Excluir</button>
-    <div class="col" id="admEditActions" style="flex:0 0 auto; display:none; gap:8px">
-    <button id="btnAdmConfirma" class="btn">Confirmar</button>
-    <button id="btnAdmCancela"  class="btn ghost">Cancelar</button>
-    </div>
-  </div>
- </div>
-</div>
       </div>
    
 
