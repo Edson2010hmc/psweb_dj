@@ -21,3 +21,7 @@ env/
 # OS
 .DS_Store
 Thumbs.db
+run_server.bat
+run_server.py
+run_admin.bat
+run_admin.py

@@ -2,7 +2,13 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
+    # API Index
     path('', views.index, name='index'),
+
+    # API Validação de Usuário
+    path('api/validar-usuario/', views.validar_usuario, name='validar_usuario'),
+    path('api/get-current-user/', views.get_current_user, name='get_current_user'),
+
     # API Fiscais
     path('api/fiscais/', views.fiscais_list, name='fiscais_list'),
     path('api/fiscais/<int:fiscal_id>/', views.fiscais_detail, name='fiscais_detail'),

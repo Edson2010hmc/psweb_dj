@@ -4,7 +4,14 @@
   'use strict';
 
   // ===== INICIALIZAÇÃO =====
-  function init() {
+  async function init() {
+    // Validar usuário ANTES de mostrar interface
+    if (typeof AuthModule !== 'undefined' && AuthModule.validarUsuario) {
+      const autorizado = await AuthModule.validarUsuario();
+      if (!autorizado) {
+        return; // Para aqui se não autorizado
+      }
+    }
     configurarNavegacaoTabs();
     configurarNavegacaoSubtabs();
     inicializarModulos();
