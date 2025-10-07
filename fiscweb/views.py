@@ -772,7 +772,7 @@ def listar_passagens_usuario(request):
     """
     try:
         fiscal_nome = request.GET.get('fiscalNome', '').strip()
-        
+        print(f"[DEBUG] Fiscal nome recebido: '{fiscal_nome}'")
         if not fiscal_nome:
             return JsonResponse({
                 'success': False,
@@ -781,14 +781,24 @@ def listar_passagens_usuario(request):
         
         passagens = PassServ.objects.filter(
             fiscalDes=fiscal_nome
-        ).order_by('-dataEmissaoPS').values(
-            'id', 'numPS', 'anoPS', 'BarcoPS', 
-            'dataInicio', 'dataFim', 'dataEmissaoPS', 'statusPS'
-        )
+        ).order_by('-dataEmissaoPS')
+
+        passagens_list = []
+        for ps in passagens:
+            passagens_list.append({
+                'id': ps.id,
+                'numPS': ps.numPS,
+                'anoPS': ps.anoPS,
+                'BarcoPS': ps.BarcoPS,
+                'dataInicio': str(ps.dataInicio),
+                'dataFim': str(ps.dataFim),
+                'dataEmissaoPS': str(ps.dataEmissaoPS),
+                'statusPS': ps.statusPS
+            })
         
         return JsonResponse({
             'success': True,
-            'data': list(passagens)
+            'data': passagens_list
         })
         
     except Exception as e:

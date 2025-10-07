@@ -24,6 +24,9 @@
   });
     inicializarModulos();
     configurarModalNovaPS();
+    if (typeof PassagensModule !== 'undefined' && PassagensModule.carregarPassagensUsuario) {
+  PassagensModule.carregarPassagensUsuario();
+}
   }
 
   // ===== CONFIGURAR NAVEGAÇÃO ENTRE TABS PRINCIPAIS =====
@@ -255,9 +258,14 @@ async function carregarEmbarcacoesModal() {
     if (typeof EmbarcacoesModule !== 'undefined' && EmbarcacoesModule.init) {
       EmbarcacoesModule.init();
     }
+
+    if (typeof PassagensModule !== 'undefined' && PassagensModule.init) {
+        PassagensModule.init();
+}
   }
 
 // ===== REINICIAR FORMULÁRIOS DE CADASTROS =====
+
   function reiniciarCadastros() {
     // Reinicia formulário de Fiscais
     if (typeof FiscaisModule !== 'undefined' && FiscaisModule.reiniciar) {
