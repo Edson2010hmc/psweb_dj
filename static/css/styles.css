@@ -60,7 +60,7 @@ main { padding:12px; }
   flex-direction: column;
   gap: 4px; /* espaçamento vertical entre as linhas */
 }
-/* Cards PS com formatação específica */
+
 /* Cards PS com formatação específica */
 .ps-card-content {
     display: flex;
@@ -70,17 +70,18 @@ main { padding:12px; }
     text-align: center; /* CENTRALIZA TODAS AS LINHAS */
 }
 
-/* Linha 1: 99/2000 [tipo] [nome embarc] - fonte 12 */
+/* Linha 1: [num][ano] [tipo] [nome embarc] - fonte 12 */
 .ps-linha1 {
-    font-size: 16px;
+    font-size: 12px;
+    color: #080ba8; /* PRETO */
     font-weight: bold;
-    color: var(--ink);
     text-align: center;
 }
 
 /* Linha 2: Periodo [Inicio] a [Fim] - fonte 10 */
 .ps-linha2 {
     font-size: 12px;
+    font-weight: bold;
     color: var(--muted);
     text-align: center;
 }
@@ -89,41 +90,48 @@ main { padding:12px; }
 .ps-linha3 {
     font-size: 14px;
     font-weight: bold;
+    color: #000000; /* PRETO */
     text-transform: uppercase;
     text-align: center;
 }
 
 /* Status específicos com cores */
-.ps-linha3.status-rascunho {
-    color: #ff2600; /* laranja */
+.ps-linha3.status-RASCUNHO {
+    color: #ffffff; /* VERMELHO */
+    background: #b33;
 }
 
-.ps-linha3.status-finalizada {
-    color: #059669; /* verde */
+.ps-linha3.status-FINALIZADA {
+    color: #ffffff; /* verde */
+    background: rgb(22, 4, 104);
 }
 
-.ps-linha3.status-indefinido {
-    color: #6b7280; /* cinza */
+.ps-linha3.status-INDEFINIDO {
+    color: #ffffff; /* cinza */
+    background-color: rgb(62, 57, 57);
 }
 
-/* Linha 4: [Fiscal Desemb]>[Fiscal Emb] - fonte 8 */
+/* Linha 4: Data da Troca de Turma - fonte 14 */
 .ps-linha4 {
-    font-size: 11px;
-    color: #0654ee; /* cinza mais claro */
+    font-size: 12px;
+    color: #058c1e; /* VERDE */
+    font-weight: bold;
     text-align: center;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
 }
 
-/* Ajuste no card para melhor apresentação */
+/* Estilo do card */
 #listaPS li {
-    border: 1px solid var(--line);
+    border: 2px solid #0af0c6;
     border-radius: 8px;
     padding: 8px;
     cursor: pointer;
-    background: #bfc1c2;
+    background: #ffffff;
     transition: transform .08s ease, box-shadow .08s ease;
+    width: 220px;
+    min-width: 200px;
 }
 
 #listaPS li:hover {

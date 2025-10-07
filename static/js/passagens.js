@@ -223,10 +223,10 @@ async function carregarFiscaisEmbarcando(fiscalEmbSelecionado = '') {
 
     li.innerHTML = `
       <div class="ps-card-content">
-        <div class="ps-linha1">${psData.numPS.toString().padStart(2, '0')}/${psData.anoPS}</div>
-        <div class="ps-linha2">${psData.BarcoPS}</div>
-        <div class="ps-linha3">Período: ${formatarData(psData.dataInicio)} a ${formatarData(psData.dataFim)}</div>
-        <div class="ps-linha4">Troca de Turma ${formatarData(psData.dataEmissaoPS)}</div>
+        <div class="ps-linha1">N°${psData.numPS.toString().padStart(2, '0')}/${psData.anoPS} => ${psData.BarcoPS}</div>
+        <div class="ps-linha2">PERÍODO: ${formatarData(psData.dataInicio)} a ${formatarData(psData.dataFim)}</div>
+        <div class="ps-linha3 status-${psData.statusPS}">${psData.statusPS}</div>
+        <div class="ps-linha4">TROCA DE TURMA ${formatarData(psData.dataEmissaoPS)}</div>
       </div>
     `;
 
@@ -346,6 +346,12 @@ async function salvarRascunho(psId, silencioso = false) {
   }
 }
 
+// ===== Salvamento silencioso ao trocar de aba ============================================
+async function salvarAntesDeSair() {
+  if (!psAtualId) return;
+  await salvarRascunho(psAtualId, true);
+}
+
 // ===== CONFIGURAR BOTÃO SALVAR ==========================================================
 function configurarBotaoSalvar() {
   const btnSalvar = document.getElementById('btnSalvar');
@@ -388,7 +394,9 @@ async function carregarPassagensUsuario() {
   // ===== EXPORTAR FUNÇÕES ================================================================
   return {
     criarNovaPS,
-    carregarPassagensUsuario
+    carregarPassagensUsuario,
+    salvarRascunho,
+    salvarAntesDeSair
   };
 
 })();

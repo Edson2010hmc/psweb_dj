@@ -34,8 +34,14 @@
     const tablinks = document.querySelectorAll('.tablink');
     
     tablinks.forEach(link => {
-      link.addEventListener('click', function() {
+      link.addEventListener('click', async function() {
         const targetTab = this.getAttribute('data-tab');
+        const abaAtual = document.querySelector('.tab.active');
+        if (abaAtual && abaAtual.id === 'tab-passagem') {
+          if (typeof PassagensModule !== 'undefined' && PassagensModule.salvarAntesDeSair) {
+            await PassagensModule.salvarAntesDeSair();
+          }
+        }
         
         // Remove active de todos os links
         tablinks.forEach(l => l.classList.remove('active'));
@@ -167,7 +173,7 @@ function configurarModalNovaPS() {
       
       if (result.existeRascunho) {
         // Mostrar mensagem por 8 segundos
-        msgNovaPS.textContent = 'Já existe uma PS em modo rascunho para o usuário';
+        msgNovaPS.textContent = (`Já existe uma PS em modo rascunho para o fiscal ${usuario.nome}`);
         setTimeout(() => {
           msgNovaPS.textContent = '';
         }, 8000);
@@ -216,22 +222,6 @@ function configurarModalNovaPS() {
       PassagensModule.criarNovaPS(embarcacaoId, barcoData);
     }
   });
-}
-
-// ===== SALVAR PS AO TROCAR DE ABA =======================================
-async function handleTabChange(targetTab) {
-  const abaAtual = document.querySelector('.tab.active');
-  
-  // Verifica se está saindo da aba passagem
-  if (abaAtual && abaAtual.id === 'tab-passagem') {
-    // Salva silenciosamente antes de sair
-    if (typeof PassagensModule !== 'undefined' && PassagensModule.salvarAntesDeSair) {
-      await PassagensModule.salvarAntesDeSair();
-    }
-  }
-  
-  // Agora muda de aba
-  setTab(targetTab);
 }
 
 // ===== CARREGAR EMBARCAÇÕES NO MODAL =====================================
