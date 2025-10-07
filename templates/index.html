@@ -79,13 +79,16 @@
 
 
 <!---------------SEÇÃO PORTO-------------------------------------------------------------------------------------------------------->
+<!---------------SEÇÃO PORTO EM FORMATO ACCORDION-------------------------------------------------------------------------------------------------------->
 <div class="subtab active" id="sub-porto">
 
-<div class="row" style="grid-template-columns:repeat(3,1fr); gap:12px;">  <!-- PRIMEIRA LINHA DE CARDS DA TELA PORTO-->
-
-  <!-- 1.1 Troca de Turma ---------------------------------------------------------------------------------------------------------->
-  <div class="card" style="height:100%;">
-    <h3>1.1 Troca de Turma</h3>
+<!-- 1.1 Troca de Turma -->
+<div class="accordion-item">
+  <div class="accordion-header" data-target="trocaturma">
+    <span>1.1 Troca de Turma</span>
+    <span class="toggle">▼</span>
+  </div>
+  <div class="accordion-content" id="acc-trocaturma">
     <div class="col">
       <label>Porto *</label><input id="ttPorto" type="text" maxlength="100">
       <label>Terminal *</label><input id="ttTerminal" type="text" maxlength="100">
@@ -95,13 +98,16 @@
       <label>Observações</label><textarea id="ttObs" maxlength="4000" rows="8" style="width:100%;resize:vertical;overflow:auto;"></textarea>
     </div>
   </div>
+</div>
 
-  <!-- 1.2 Manutenção Preventiva ------------------------------------------------------------------------------------------------------->
-  <div class="card" style="height:100%;">
-    <h3>1.2 Manutenção Preventiva</h3>
+<!-- 1.2 Manutenção Preventiva -->
+<div class="accordion-item">
+  <div class="accordion-header" data-target="manutprev">
+    <span>1.2 Manutenção Preventiva</span>
+    <span class="toggle">▼</span>
+  </div>
+  <div class="accordion-content" id="acc-manutprev">
     <div class="col">
-
-      
       <label style="display:inline-flex;align-items:center;gap:6px;white-space:nowrap;margin-bottom:8px;">
         <input id="mpNaoPrevisto" type="checkbox">
         Não previsto para esse porto
@@ -137,10 +143,15 @@
       <textarea id="mpObs" maxlength="4000" rows="8" style="width:100%;resize:vertical;overflow:auto;"></textarea>
     </div>
   </div>
+</div>
 
-  <!-- 1.3 Abastecimento ---------------------------------------------------------------------------------------------------------->
-  <div class="card" style="height:100%;">
-    <h3>1.3 Abastecimento</h3>
+<!-- 1.3 Abastecimento -->
+<div class="accordion-item">
+  <div class="accordion-header" data-target="abastecimento">
+    <span>1.3 Abastecimento</span>
+    <span class="toggle">▼</span>
+  </div>
+  <div class="accordion-content" id="acc-abastecimento">
     <div class="col">
       <label style="display:inline-flex;align-items:center;gap:6px;white-space:nowrap;margin-bottom:8px;">
         <input id="abNaoPrevisto" type="checkbox"> Não previsto para esse porto
@@ -152,13 +163,15 @@
       <label>Observações</label><textarea id="abObs" maxlength="4000" rows="8" style="width:100%;resize:vertical;overflow:auto;"></textarea>
     </div>
   </div>
-
 </div>
-<div class="row" style="grid-template-columns:repeat(3,1fr); gap:12px;"><!-- SEGUNDA LINHA DE CARDS DA TELA PORTO-->
 
-  <!-- 1.4 Inspeção ANVISA --------------------------------------------------------------------------------------------------------->
-  <div class="card" style="height:100%;">
-    <h3>1.4 Inspeção ANVISA</h3>
+<!-- 1.4 Inspeção ANVISA -->
+<div class="accordion-item">
+  <div class="accordion-header" data-target="anvisa">
+    <span>1.4 Inspeção ANVISA</span>
+    <span class="toggle">▼</span>
+  </div>
+  <div class="accordion-content" id="acc-anvisa">
     <div class="col">
       <label style="display:inline-flex;align-items:center;gap:6px;white-space:nowrap;margin-bottom:8px;">
         <input id="anNaoPrevisto" type="checkbox"> Não previsto para esse porto
@@ -168,14 +181,18 @@
       <label>Descrição</label>
       <input id="anDesc" type="text" maxlength="500">
       <label>Observações</label>
-<textarea id="anObs" maxlength="4000" rows="8" style="width:100%;resize:vertical;overflow:auto;"></textarea>
-
+      <textarea id="anObs" maxlength="4000" rows="8" style="width:100%;resize:vertical;overflow:auto;"></textarea>
     </div>
   </div>
+</div>
 
-  <!-- 1.5 Inspeção de Classe ------------------------------------------------------------------------------------------------->
-  <div class="card" style="height:100%;">
-    <h3>1.5 Inspeção de Classe</h3>
+<!-- 1.5 Inspeção de Classe -->
+<div class="accordion-item">
+  <div class="accordion-header" data-target="classe">
+    <span>1.5 Inspeção de Classe</span>
+    <span class="toggle">▼</span>
+  </div>
+  <div class="accordion-content" id="acc-classe">
     <div class="col">
       <label style="display:inline-flex;align-items:center;gap:6px;white-space:nowrap;margin-bottom:8px;">
         <input id="clNaoPrevisto" type="checkbox"> Não previsto para esse porto
@@ -186,13 +203,17 @@
       <input id="clDesc" type="text" maxlength="500">
       <label>Observações</label>
       <textarea id="clObs" maxlength="4000" rows="8" style="width:100%;resize:vertical;overflow:auto;"></textarea>
-
     </div>
   </div>
+</div>
 
-  <!-- 1.6 Inspeções/Auditorias Petrobras -->
-  <div class="card" style="height:100%;">
-    <h3>1.6 Inspeções/Auditorias Petrobras</h3>
+<!-- 1.6 Inspeções/Auditorias Petrobras -->
+<div class="accordion-item">
+  <div class="accordion-header" data-target="petrobras">
+    <span>1.6 Inspeções/Auditorias Petrobras</span>
+    <span class="toggle">▼</span>
+  </div>
+  <div class="accordion-content" id="acc-petrobras">
     <div class="col">
       <label style="display:inline-flex;align-items:center;gap:6px;white-space:nowrap;margin-bottom:8px;">
         <input id="ipNaoPrevisto" type="checkbox"> Não previsto para esse porto
@@ -205,15 +226,15 @@
       <textarea id="ipObs" maxlength="4000" rows="8" style="width:100%;resize:vertical;overflow:auto;"></textarea>
     </div>
   </div>
-
 </div>
 
-
-<div class="row" style="grid-template-columns:repeat(3,1fr); gap:12px;"><!-- TERCEIRA LINHA DE CARDS DA TELA PORTO -->
-
-  <!-- 1.7 Embarque de Equipes (lista) -->
-  <div class="card" style="height:100%;">
-    <h3>1.7 Embarque de Equipes</h3>
+<!-- 1.7 Embarque de Equipes -->
+<div class="accordion-item">
+  <div class="accordion-header" data-target="embequipes">
+    <span>1.7 Embarque de Equipes</span>
+    <span class="toggle">▼</span>
+  </div>
+  <div class="accordion-content" id="acc-embequipes">
     <div class="col">
       <label style="display:inline-flex;align-items:center;gap:6px;white-space:nowrap;margin-bottom:8px;">
         <input id="eqNaoPrevisto" type="checkbox"> Não previsto para esse porto
@@ -227,10 +248,15 @@
       <div class="col"><button id="btnAddEq" class="btn secondary">Adicionar linha</button></div>
     </div>
   </div>
+</div>
 
-  <!-- 1.8 Embarque de Materiais (lista) -->
-  <div class="card" style="height:100%;">
-    <h3>1.8 Embarque de Materiais</h3>
+<!-- 1.8 Embarque de Materiais -->
+<div class="accordion-item">
+  <div class="accordion-header" data-target="embmateriais">
+    <span>1.8 Embarque de Materiais</span>
+    <span class="toggle">▼</span>
+  </div>
+  <div class="accordion-content" id="acc-embmateriais">
     <div class="col">
       <label style="display:inline-flex;align-items:center;gap:6px;white-space:nowrap;margin-bottom:8px;">
         <input id="emNaoPrevisto" type="checkbox"> Não previsto para esse porto
@@ -244,10 +270,15 @@
       <div class="col"><button id="btnAddEM" class="btn secondary">Adicionar linha</button></div>
     </div>
   </div>
+</div>
 
-  <!-- 1.9 Desembarque de Materiais (lista) -->
-  <div class="card" style="height:100%;">
-    <h3>1.9 Desembarque de Materiais</h3>
+<!-- 1.9 Desembarque de Materiais -->
+<div class="accordion-item">
+  <div class="accordion-header" data-target="desmateriais">
+    <span>1.9 Desembarque de Materiais</span>
+    <span class="toggle">▼</span>
+  </div>
+  <div class="accordion-content" id="acc-desmateriais">
     <div class="col">
       <label style="display:inline-flex;align-items:center;gap:6px;white-space:nowrap;margin-bottom:8px;">
         <input id="dmNaoPrevisto" type="checkbox"> Não previsto para esse porto
@@ -261,15 +292,15 @@
       <div class="col"><button id="btnAddDM" class="btn secondary">Adicionar linha</button></div>
     </div>
   </div>
-
 </div>
 
-<!-- QUARTA LINHA DE CARDS DA TELA PORTO -->
-<div class="row" style="grid-template-columns:repeat(3,1fr); gap:12px;">
-
-  <!-- 1.10 OS Mobilização/Desmobilização (lista) -->
-  <div class="card" style="height:100%;">
-    <h3>1.10 OS Mobilização/Desmobilização</h3>
+<!-- 1.10 OS Mobilização/Desmobilização -->
+<div class="accordion-item">
+  <div class="accordion-header" data-target="osmobdesm">
+    <span>1.10 OS Mobilização/Desmobilização</span>
+    <span class="toggle">▼</span>
+  </div>
+  <div class="accordion-content" id="acc-osmobdesm">
     <div class="col">
       <label style="display:inline-flex;align-items:center;gap:6px;white-space:nowrap;margin-bottom:8px;">
         <input id="omNaoPrevisto" type="checkbox"> Não previsto para esse porto
@@ -285,9 +316,8 @@
       <div class="col"><button id="btnAddOM" class="btn secondary">Adicionar linha</button></div>
     </div>
   </div>
-
-
 </div>
+
 </div> <!-- FIM DA SEÇÃO PORTO -->
 
 

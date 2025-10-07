@@ -95,7 +95,7 @@
     });
   }
   
-// ===== CONFIGURAR ACORDION DA TELA DE CADASTRO ========================
+// ===== CONFIGURAR ACORDION DAS TELAS ========================
 function configurarAccordion() {
   const headers = document.querySelectorAll('.accordion-header');
   
@@ -109,6 +109,8 @@ function configurarAccordion() {
       if (content.classList.contains('active')) {
         content.classList.remove('active');
         toggle.textContent = '▼';
+        header.closest('.accordion-item').style.width = '600px';
+
         return;
       }
       
@@ -125,6 +127,8 @@ function configurarAccordion() {
       // Abre o clicado
       content.classList.add('active');
       toggle.textContent = '▲';
+      header.closest('.accordion-item').style.width = '100%';
+
     });
   });
 }
