@@ -1,9 +1,9 @@
-// ===== APLICAÇÃO PRINCIPAL - GERENCIADOR DE NAVEGAÇÃO =====
+// ===== APLICAÇÃO PRINCIPAL - GERENCIADOR DE NAVEGAÇÃO ===============
 
 (function() {
   'use strict';
 
-  // ===== INICIALIZAÇÃO =====
+  // ===== INICIALIZAÇÃO ==============================================
   async function init() {
     // Validar usuário ANTES de mostrar interface
     if (typeof AuthModule !== 'undefined' && AuthModule.validarUsuario) {
@@ -29,7 +29,7 @@
 }
   }
 
-  // ===== CONFIGURAR NAVEGAÇÃO ENTRE TABS PRINCIPAIS =====
+  // ===== CONFIGURAR NAVEGAÇÃO ENTRE TABS PRINCIPAIS =================
   function configurarNavegacaoTabs() {
     const tablinks = document.querySelectorAll('.tablink');
     
@@ -61,7 +61,7 @@
     });
   }
 
-  // ===== CONFIGURAR NAVEGAÇÃO ENTRE SUBTABS =====
+  // ===== CONFIGURAR NAVEGAÇÃO ENTRE SUBTABS ==========================
   function configurarNavegacaoSubtabs() {
     const sublinks = document.querySelectorAll('.sublink');
     
@@ -88,7 +88,8 @@
       });
     });
   }
-// ===== CONFIGURAR ACORDION DA TELA DE CADASTRO =====
+  
+// ===== CONFIGURAR ACORDION DA TELA DE CADASTRO ========================
 function configurarAccordion() {
   const headers = document.querySelectorAll('.accordion-header');
   
@@ -123,7 +124,7 @@ function configurarAccordion() {
 }
 
 
-// ===== CONFIGURAR MODAL NOVA PS ======================================
+// ===== CONFIGURAR MODAL NOVA PS ========================================
 function configurarModalNovaPS() {
   // Funções auxiliares para controlar botões
   function desabilitarBotoesMenu() {
@@ -217,7 +218,23 @@ function configurarModalNovaPS() {
   });
 }
 
-// ===== CARREGAR EMBARCAÇÕES NO MODAL =====
+// ===== SALVAR PS AO TROCAR DE ABA =======================================
+async function handleTabChange(targetTab) {
+  const abaAtual = document.querySelector('.tab.active');
+  
+  // Verifica se está saindo da aba passagem
+  if (abaAtual && abaAtual.id === 'tab-passagem') {
+    // Salva silenciosamente antes de sair
+    if (typeof PassagensModule !== 'undefined' && PassagensModule.salvarAntesDeSair) {
+      await PassagensModule.salvarAntesDeSair();
+    }
+  }
+  
+  // Agora muda de aba
+  setTab(targetTab);
+}
+
+// ===== CARREGAR EMBARCAÇÕES NO MODAL =====================================
 async function carregarEmbarcacoesModal() {
   try {
     const response = await fetch('/api/barcos/');
@@ -243,11 +260,7 @@ async function carregarEmbarcacoesModal() {
   }
 }
 
-
-
-
-
-  // ===== INICIALIZAR MÓDULOS EXISTENTES =====
+  // ===== INICIALIZAR MÓDULOS EXISTENTES ===================================
   function inicializarModulos() {
     // Inicializar módulo de Fiscais
     if (typeof FiscaisModule !== 'undefined' && FiscaisModule.init) {
@@ -264,7 +277,7 @@ async function carregarEmbarcacoesModal() {
 }
   }
 
-// ===== REINICIAR FORMULÁRIOS DE CADASTROS =====
+// ===== REINICIAR FORMULÁRIOS DE CADASTROS ==================================
 
   function reiniciarCadastros() {
     // Reinicia formulário de Fiscais
@@ -284,11 +297,7 @@ async function carregarEmbarcacoesModal() {
   });
   }
 
-
-
-
-
-  // ===== EXECUTAR QUANDO DOM CARREGAR =====
+  // ===== EXECUTAR QUANDO DOM CARREGAR =======================================
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', init);
   } else {

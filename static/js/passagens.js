@@ -247,6 +247,7 @@ async function abrirPS(psId) {
   try {
     const response = await fetch(`/api/passagens/${psId}/`);
     const result = await response.json();
+    psAtualId = psId;
 
     if (!result.success) {
       psAtualId = psId;
@@ -313,7 +314,7 @@ function configurarBotaoExcluir() {
 }
 
 // ===== SALVAR RASCUNHO ==================================================================
-async function salvarRascunho(psId) {
+async function salvarRascunho(psId, silencioso = false) {
   try {
     const dados = {
       dataEmissaoPS: document.getElementById('fData').value,
@@ -334,10 +335,14 @@ async function salvarRascunho(psId) {
       throw new Error(result.error);
     }
 
-    alert('Rascunho salvo com sucesso!');
+    if (!silencioso) {
+      alert('Rascunho salvo com sucesso!');
+    }
 
   } catch (error) {
-    alert('Erro ao salvar rascunho: ' + error.message);
+    if (!silencioso) {
+      alert('Erro ao salvar rascunho: ' + error.message);
+    }
   }
 }
 
