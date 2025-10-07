@@ -4,8 +4,13 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 import json
 from .models import FiscaisCad,BarcosCad,ModalBarco,PassServ
+from .models import PortoTrocaTurma
+from .models import PortoManutPrev
+from .models import PortoAbast
 from .models import PortoInspNorm,subTabPortoInspNorm
-
+from .models import PortoInspPetr,subTabPortoInspPetr
+from .models import PortoEmbMat,subTabPortoEmbMat
+from .models import PortoEmbEquip,subTabPortoEmbEquip
 #===============================================RENDERIZA TELA PRINCIPAL=================================================
 def index(request):
     """Renderiza a página principal"""
@@ -252,7 +257,7 @@ def fiscais_detail(request, fiscal_id):
                 'error': str(e)
             }, status=400)
         
-        
+
 #================================================CADASTRO FISCAIS - API REST - USUARIOS COM PERFIL DE FISCAL=================================================
 @csrf_exempt
 @require_http_methods(["GET"])
@@ -1020,6 +1025,356 @@ def porto_insp_norm_detail(request, insp_norm_id):
                 'error': str(e)
             }, status=400)
 
+
+#================================================TROCA DE TURMA - API REST=================================================
+@csrf_exempt
+@require_http_methods(["GET", "POST"])
+def porto_troca_turma_list(request, ps_id):
+    """
+    GET: Retorna troca de turma de uma PS (se existir)
+    POST: Cria nova troca de turma para uma PS
+    """
+    
+    # Verificar se PS existe
+    try:
+        ps = PassServ.objects.get(id=ps_id)
+    except PassServ.DoesNotExist:
+        print(f"[API ERROR] PS ID {ps_id} não encontrada")
+        return JsonResponse({
+            'success': False,
+            'error': 'Passagem de Serviço não encontrada'
+        }, status=404)
+    
+    if request.method == 'GET':
+        try:
+            troca_turma = PortoTrocaTurma.objects.filter(idxPortoTT=ps).first()
+            
+            if not troca_turma:
+                print(f"[API] GET /ps/{ps_id}/troca-turma/ - Nenhuma troca de turma encontrada")
+                return JsonResponse({
+                    'success': True,
+                    'data': None
+                })
+            
+            print(f"[API] GET /ps/{ps_id}/troca-turma/ - Retornando troca de turma ID {troca_turma.id}")
+            
+            return JsonResponse({
+                'success': True,
+                'data': {
+                    'id': troca_turma.id,
+                    'Porto': troca_turma.Porto,
+                    'Terminal': troca_turma.Terminal,
+                    'OrdSerPorto': troca_turma.OrdSerPorto,
+                    'AtracPorto': str(troca_turma.AtracPorto),
+                    'DuracPorto': troca_turma.DuracPorto,
+                    'ObservPorto': troca_turma.ObservPorto
+                }
+            })
+            
+        except Exception as e:
+            print(f"[API ERROR] GET /ps/{ps_id}/troca-turma/ - {str(e)}")
+            return JsonResponse({
+                'success': False,
+                'error': str(e)
+            }, status=500)
+    
+    elif request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            
+            # Verificar se já existe
+            troca_existente = PortoTrocaTurma.objects.filter(idxPortoTT=ps).first()
+            if troca_existente:
+                print(f"[API ERROR] POST /ps/{ps_id}/troca-turma/ - Já existe troca de turma para esta PS")
+                return JsonResponse({
+                    'success': False,
+                    'error': 'Já existe troca de turma para esta PS'
+                }, status=400)
+            
+            print(f"[API] POST /ps/{ps_id}/troca-turma/ - Criando troca de turma")
+            
+            troca_turma = PortoTrocaTurma.objects.create(
+                idxPortoTT=ps,
+                Porto=data.get('Porto', ''),
+                Terminal=data.get('Terminal', ''),
+                OrdSerPorto=data.get('OrdSerPorto', ''),
+                AtracPorto=data.get('AtracPorto'),
+                DuracPorto=data.get('DuracPorto', ''),
+                ObservPorto=data.get('ObservPorto', '')
+            )
+            
+            print(f"[API] POST /ps/{ps_id}/troca-turma/ - Troca de turma criada com ID: {troca_turma.id}")
+            
+            return JsonResponse({
+                'success': True,
+                'message': 'Troca de Turma criada com sucesso',
+                'data': {
+                    'id': troca_turma.id,
+                    'Porto': troca_turma.Porto,
+                    'Terminal': troca_turma.Terminal,
+                    'OrdSerPorto': troca_turma.OrdSerPorto,
+                    'AtracPorto': str(troca_turma.AtracPorto),
+                    'DuracPorto': troca_turma.DuracPorto,
+                    'ObservPorto': troca_turma.ObservPorto
+                }
+            }, status=201)
+            
+        except Exception as e:
+            print(f"[API ERROR] POST /ps/{ps_id}/troca-turma/ - {str(e)}")
+            return JsonResponse({
+                'success': False,
+                'error': str(e)
+            }, status=400)
+
+@csrf_exempt
+@require_http_methods(["PUT", "DELETE"])
+def porto_troca_turma_detail(request, troca_turma_id):
+    """
+    PUT: Atualiza troca de turma
+    DELETE: Remove troca de turma
+    """
+    
+    try:
+        troca_turma = PortoTrocaTurma.objects.get(id=troca_turma_id)
+    except PortoTrocaTurma.DoesNotExist:
+        print(f"[API ERROR] Troca de Turma ID {troca_turma_id} não encontrada")
+        return JsonResponse({
+            'success': False,
+            'error': 'Troca de Turma não encontrada'
+        }, status=404)
+    
+    if request.method == 'PUT':
+        try:
+            data = json.loads(request.body)
+            
+            print(f"[API] PUT /troca-turma/{troca_turma_id}/ - Atualizando troca de turma")
+            
+            troca_turma.Porto = data.get('Porto', troca_turma.Porto)
+            troca_turma.Terminal = data.get('Terminal', troca_turma.Terminal)
+            troca_turma.OrdSerPorto = data.get('OrdSerPorto', troca_turma.OrdSerPorto)
+            troca_turma.AtracPorto = data.get('AtracPorto', troca_turma.AtracPorto)
+            troca_turma.DuracPorto = data.get('DuracPorto', troca_turma.DuracPorto)
+            troca_turma.ObservPorto = data.get('ObservPorto', troca_turma.ObservPorto)
+            troca_turma.save()
+            
+            print(f"[API] PUT /troca-turma/{troca_turma_id}/ - Troca de turma atualizada")
+            
+            return JsonResponse({
+                'success': True,
+                'message': 'Troca de Turma atualizada com sucesso',
+                'data': {
+                    'id': troca_turma.id,
+                    'Porto': troca_turma.Porto,
+                    'Terminal': troca_turma.Terminal,
+                    'OrdSerPorto': troca_turma.OrdSerPorto,
+                    'AtracPorto': str(troca_turma.AtracPorto),
+                    'DuracPorto': troca_turma.DuracPorto,
+                    'ObservPorto': troca_turma.ObservPorto
+                }
+            })
+            
+        except Exception as e:
+            print(f"[API ERROR] PUT /troca-turma/{troca_turma_id}/ - {str(e)}")
+            return JsonResponse({
+                'success': False,
+                'error': str(e)
+            }, status=400)
+    
+    elif request.method == 'DELETE':
+        try:
+            troca_turma.delete()
+            
+            print(f"[API] DELETE /troca-turma/{troca_turma_id}/ - Troca de turma removida")
+            
+            return JsonResponse({
+                'success': True,
+                'message': 'Troca de Turma removida com sucesso'
+            })
+            
+        except Exception as e:
+            print(f"[API ERROR] DELETE /troca-turma/{troca_turma_id}/ - {str(e)}")
+            return JsonResponse({
+                'success': False,
+                'error': str(e)
+            }, status=400)
+
+
+#================================================MANUTENÇÃO PREVENTIVA - API REST=================================================
+@csrf_exempt
+@require_http_methods(["GET", "POST"])
+def porto_manut_prev_list(request, ps_id):
+    """
+    GET: Retorna manutenção preventiva de uma PS (se existir)
+    POST: Cria nova manutenção preventiva para uma PS
+    """
+    
+    # Verificar se PS existe
+    try:
+        ps = PassServ.objects.get(id=ps_id)
+    except PassServ.DoesNotExist:
+        print(f"[API ERROR] PS ID {ps_id} não encontrada")
+        return JsonResponse({
+            'success': False,
+            'error': 'Passagem de Serviço não encontrada'
+        }, status=404)
+    
+    if request.method == 'GET':
+        try:
+            manut_prev = PortoManutPrev.objects.filter(idxPortoMP=ps).first()
+            
+            if not manut_prev:
+                print(f"[API] GET /ps/{ps_id}/manut-prev/ - Nenhuma manutenção preventiva encontrada")
+                return JsonResponse({
+                    'success': True,
+                    'data': None
+                })
+            
+            print(f"[API] GET /ps/{ps_id}/manut-prev/ - Retornando manutenção preventiva ID {manut_prev.id}")
+            
+            return JsonResponse({
+                'success': True,
+                'data': {
+                    'id': manut_prev.id,
+                    'prevManPrev': manut_prev.prevManPrev,
+                    'Franquia': manut_prev.Franquia,
+                    'SaldoFranquia': manut_prev.SaldoFranquia,
+                    'OrdSerManutPrev': manut_prev.OrdSerManutPrev,
+                    'Rade': manut_prev.Rade.url if manut_prev.Rade else None,
+                    'RadeNome': manut_prev.Rade.name.split('/')[-1] if manut_prev.Rade else None,
+                    'ObservManPrev': manut_prev.ObservManPrev
+                }
+            })
+            
+        except Exception as e:
+            print(f"[API ERROR] GET /ps/{ps_id}/manut-prev/ - {str(e)}")
+            return JsonResponse({
+                'success': False,
+                'error': str(e)
+            }, status=500)
+    
+    elif request.method == 'POST':
+        try:
+            # Verificar se já existe
+            manut_existente = PortoManutPrev.objects.filter(idxPortoMP=ps).first()
+            if manut_existente:
+                print(f"[API ERROR] POST /ps/{ps_id}/manut-prev/ - Já existe manutenção preventiva para esta PS")
+                return JsonResponse({
+                    'success': False,
+                    'error': 'Já existe manutenção preventiva para esta PS'
+                }, status=400)
+            
+            print(f"[API] POST /ps/{ps_id}/manut-prev/ - Criando manutenção preventiva")
+            
+            # Dados vêm de request.POST (não JSON) quando tem arquivo
+            manut_prev = PortoManutPrev.objects.create(
+                idxPortoMP=ps,
+                prevManPrev=request.POST.get('prevManPrev', 'false').lower() == 'true',
+                Franquia=int(request.POST.get('Franquia', 0)),
+                SaldoFranquia=int(request.POST.get('SaldoFranquia', 0)),
+                OrdSerManutPrev=request.POST.get('OrdSerManutPrev', ''),
+                Rade=request.FILES.get('Rade'),
+                ObservManPrev=request.POST.get('ObservManPrev', '')
+            )
+            
+            print(f"[API] POST /ps/{ps_id}/manut-prev/ - Manutenção preventiva criada com ID: {manut_prev.id}")
+            
+            return JsonResponse({
+                'success': True,
+                'message': 'Manutenção Preventiva criada com sucesso',
+                'data': {
+                    'id': manut_prev.id,
+                    'prevManPrev': manut_prev.prevManPrev,
+                    'Franquia': manut_prev.Franquia,
+                    'SaldoFranquia': manut_prev.SaldoFranquia,
+                    'OrdSerManutPrev': manut_prev.OrdSerManutPrev,
+                    'Rade': manut_prev.Rade.url if manut_prev.Rade else None,
+                    'RadeNome': manut_prev.Rade.name.split('/')[-1] if manut_prev.Rade else None,
+                    'ObservManPrev': manut_prev.ObservManPrev
+                }
+            }, status=201)
+            
+        except Exception as e:
+            print(f"[API ERROR] POST /ps/{ps_id}/manut-prev/ - {str(e)}")
+            return JsonResponse({
+                'success': False,
+                'error': str(e)
+            }, status=400)
+
+@csrf_exempt
+@require_http_methods(["PUT", "DELETE"])
+def porto_manut_prev_detail(request, manut_prev_id):
+    """
+    PUT: Atualiza manutenção preventiva
+    DELETE: Remove manutenção preventiva
+    """
+    
+    try:
+        manut_prev = PortoManutPrev.objects.get(id=manut_prev_id)
+    except PortoManutPrev.DoesNotExist:
+        print(f"[API ERROR] Manutenção Preventiva ID {manut_prev_id} não encontrada")
+        return JsonResponse({
+            'success': False,
+            'error': 'Manutenção Preventiva não encontrada'
+        }, status=404)
+    
+    if request.method == 'PUT':
+        try:
+            print(f"[API] PUT /manut-prev/{manut_prev_id}/ - Atualizando manutenção preventiva")
+            
+            # Dados vêm de request.POST quando tem arquivo
+            manut_prev.prevManPrev = request.POST.get('prevManPrev', str(manut_prev.prevManPrev)).lower() == 'true'
+            manut_prev.Franquia = int(request.POST.get('Franquia', manut_prev.Franquia))
+            manut_prev.SaldoFranquia = int(request.POST.get('SaldoFranquia', manut_prev.SaldoFranquia))
+            manut_prev.OrdSerManutPrev = request.POST.get('OrdSerManutPrev', manut_prev.OrdSerManutPrev)
+            manut_prev.ObservManPrev = request.POST.get('ObservManPrev', manut_prev.ObservManPrev)
+            
+            # Atualizar arquivo apenas se novo arquivo foi enviado
+            if 'Rade' in request.FILES:
+                manut_prev.Rade = request.FILES['Rade']
+            
+            manut_prev.save()
+            
+            print(f"[API] PUT /manut-prev/{manut_prev_id}/ - Manutenção preventiva atualizada")
+            
+            return JsonResponse({
+                'success': True,
+                'message': 'Manutenção Preventiva atualizada com sucesso',
+                'data': {
+                    'id': manut_prev.id,
+                    'prevManPrev': manut_prev.prevManPrev,
+                    'Franquia': manut_prev.Franquia,
+                    'SaldoFranquia': manut_prev.SaldoFranquia,
+                    'OrdSerManutPrev': manut_prev.OrdSerManutPrev,
+                    'Rade': manut_prev.Rade.url if manut_prev.Rade else None,
+                    'RadeNome': manut_prev.Rade.name.split('/')[-1] if manut_prev.Rade else None,
+                    'ObservManPrev': manut_prev.ObservManPrev
+                }
+            })
+            
+        except Exception as e:
+            print(f"[API ERROR] PUT /manut-prev/{manut_prev_id}/ - {str(e)}")
+            return JsonResponse({
+                'success': False,
+                'error': str(e)
+            }, status=400)
+    
+    elif request.method == 'DELETE':
+        try:
+            manut_prev.delete()
+            
+            print(f"[API] DELETE /manut-prev/{manut_prev_id}/ - Manutenção preventiva removida")
+            
+            return JsonResponse({
+                'success': True,
+                'message': 'Manutenção Preventiva removida com sucesso'
+            })
+            
+        except Exception as e:
+            print(f"[API ERROR] DELETE /manut-prev/{manut_prev_id}/ - {str(e)}")
+            return JsonResponse({
+                'success': False,
+                'error': str(e)
+            }, status=400)
 
 #================================================INSPEÇÃO NORMATIVA - SUBTABELA - API REST=================================================
 @csrf_exempt

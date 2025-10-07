@@ -225,7 +225,21 @@ const InspNormModule = (() => {
         throw new Error(resultPrincipal.error);
       }
 
-      // 2. Salvar itens da subtabela (apenas novos)
+      // 2. Deletar itens removidos
+      for (const itemId of itensParaDeletar) {
+        const responseDelete = await fetch(`/api/insp-norm-item/${itemId}/`, {
+          method: 'DELETE'
+        });
+
+        const resultDelete = await responseDelete.json();
+
+        if (!resultDelete.success) {
+          throw new Error(resultDelete.error);
+        }
+      }
+      itensParaDeletar = [];
+
+      // 3. Salvar itens da subtabela (apenas novos)
       for (const item of itensSubtabela) {
         if (!item.id) {
           const responseItem = await fetch(`/api/insp-norm/${inspNormId}/subtab/`, {
@@ -254,6 +268,7 @@ const InspNormModule = (() => {
   function limpar() {
     inspNormId = null;
     itensSubtabela = [];
+    itensParaDeletar = [];
     elementos.checkbox.checked = false;
     elementos.obs.value = '';
     elementos.selectDesc.value = '';

@@ -1,4 +1,4 @@
-// ===== MÓDULO: PASSAGENS DE SERVIÇO ======================================================
+// ===== MODULO PASSAGENS DE SERVIÇO ======================================================
 
 const PassagensModule = (() => {
  let psAtualId = null;
@@ -68,7 +68,7 @@ const PassagensModule = (() => {
       return;
     }
 
-    // 1. Verificar rascunho para embarcação
+    // Verificar rascunho para embarcação
     try {
       const checkResponse = await fetch('/api/verificar-rascunho-embarcacao/', {
         method: 'POST',
@@ -92,10 +92,10 @@ const PassagensModule = (() => {
         return;
       }
 
-      // 2. Calcular período
+      //  Calcular período
       const periodo = calcularPeriodoPS(barcoData.dataPrimPorto);
 
-      // 3. Criar PS no backend
+      // Criar PS no backend
       const createResponse = await fetch('/api/passagens/criar/', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -116,22 +116,33 @@ const PassagensModule = (() => {
       if (!createResult.success) {
         throw new Error(createResult.error);
       }
+      // Limpar formulários dos módulos antes de criar nova
+      if (typeof TrocaTurmaModule !== 'undefined' && TrocaTurmaModule.limpar) {
+        TrocaTurmaModule.limpar();
+      }
 
-      // 4. Fechar modal
-      // Guardar ID da PS atual
+      if (typeof ManutPrevModule !== 'undefined' && ManutPrevModule.limpar) {
+        ManutPrevModule.limpar();
+      }
+
+      if (typeof InspNormModule !== 'undefined' && InspNormModule.limpar) {
+        InspNormModule.limpar();
+      }
+
+      // Fechar modal e  guardar ID da PS atual
       psAtualId = createResult.data.id;
       document.getElementById('modalNovaPS').classList.add('hidden');
         document.querySelectorAll('.tablink').forEach(btn => btn.disabled = false);
       document.getElementById('selEmbNova').value = '';
 
-      // 5. Preencher formulário da PS
+      //  Preencher formulário da PS
       preencherFormularioPS(createResult.data, barcoData, usuario);
 
-      // 6. Criar card na lista
+      // Criar card na lista
       criarCardPS(createResult.data);
 
       
-      // 7. Ir para tela da PS
+      //  Ir para tela da PS
       document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
       document.getElementById('tab-passagem').classList.add('active');
 
@@ -139,8 +150,6 @@ const PassagensModule = (() => {
       alert('Erro ao criar PS: ' + error.message);
     }
   }
-
-
 
 // ===== PREENCHER FORMULÁRIO DA PS =======================================================
 function preencherFormularioPS(psData, barcoData, usuario) {
@@ -181,6 +190,17 @@ function preencherFormularioPS(psData, barcoData, usuario) {
     configurarBotaoSalvar();
     window.btnSalvarConfigurado = true;
 }
+
+// Carregar modulo Troca de Turma
+if (typeof TrocaTurmaModule !== 'undefined' && TrocaTurmaModule.carregarDados) {
+  TrocaTurmaModule.carregarDados(psData.id);
+}
+
+// Carregar Modulo Manutenção Preventiva
+if (typeof ManutPrevModule !== 'undefined' && ManutPrevModule.carregarDados) {
+  ManutPrevModule.carregarDados(psData.id);
+}
+
 // Carregar modulo Inspeção Normativa
 if (typeof InspNormModule !== 'undefined' && InspNormModule.carregarDados) {
   InspNormModule.carregarDados(psData.id);
@@ -189,7 +209,7 @@ if (typeof InspNormModule !== 'undefined' && InspNormModule.carregarDados) {
 
 }
 
-// ===== CARREGAR FISCAIS COM PERFIL FISCAL =====
+// ===== CARREGAR USUARIOS COM PERFIL FISCAL =====
 async function carregarFiscaisEmbarcando(fiscalEmbSelecionado = '') {
   try {
     const response = await fetch('/api/fiscais/perfil-fiscal/');
@@ -263,6 +283,16 @@ async function abrirPS(psId) {
     // Preencher formulário com dados da PS
     preencherFormularioPS(result.data, null, null);
 
+    // Carregar dados Modulo Troca de Turma
+    if (typeof TrocaTurmaModule !== 'undefined' && TrocaTurmaModule.carregarDados) {
+      TrocaTurmaModule.carregarDados(psId);
+    }
+
+    // Carregar Manutenção Preventiva
+    if (typeof ManutPrevModule !== 'undefined' && ManutPrevModule.carregarDados) {
+      ManutPrevModule.carregarDados(psId);
+    }
+
     // Carregar dados Modulo Inspeção Normativa
     if (typeof InspNormModule !== 'undefined' && InspNormModule.carregarDados) {
       InspNormModule.carregarDados(psId);
@@ -276,7 +306,6 @@ async function abrirPS(psId) {
     alert('Erro ao abrir PS: ' + error.message);
   }
 }
-
 
 // ===== EXCLUIR RASCUNHO =================================================================
 async function excluirRascunho(psId) {
@@ -302,6 +331,21 @@ async function excluirRascunho(psId) {
     if (card) {
       card.remove();
     }
+
+    // Limpar formulários dos módulos
+    if (typeof TrocaTurmaModule !== 'undefined' && TrocaTurmaModule.limpar) {
+      TrocaTurmaModule.limpar();
+    }
+
+    if (typeof ManutPrevModule !== 'undefined' && ManutPrevModule.limpar) {
+      ManutPrevModule.limpar();
+    }
+
+    if (typeof InspNormModule !== 'undefined' && InspNormModule.limpar) {
+      InspNormModule.limpar();
+    }
+
+    psAtualId = null;
 
     // Voltar para tela inicial
     document.querySelector('[data-tab="consultas"]').click();
@@ -333,8 +377,17 @@ async function salvarRascunho(psId, silencioso = false) {
       dataFim: document.getElementById('fFimPS').value,
       fiscalEmb: document.getElementById('fEmbC').value
     };
+    // Salvar dados Modulo Troca de Turma
+    if (typeof TrocaTurmaModule !== 'undefined' && TrocaTurmaModule.salvar) {
+      await TrocaTurmaModule.salvar();
+    }
 
-    // Salvar dados Inspeção Normativa
+    // Salvar Manutenção Preventiva
+    if (typeof ManutPrevModule !== 'undefined' && ManutPrevModule.salvar) {
+      await ManutPrevModule.salvar();
+    }
+
+    // Salvar dados Modulo Inspeção Normativa
     if (typeof InspNormModule !== 'undefined' && InspNormModule.salvar) {
       await InspNormModule.salvar();
     }
@@ -362,7 +415,7 @@ async function salvarRascunho(psId, silencioso = false) {
   }
 }
 
-// ===== Salvamento silencioso ao trocar de aba ============================================
+// ===== SALVAMENTO AO TROCAR DE ABA ============================================
 async function salvarAntesDeSair() {
   if (!psAtualId) return;
   await salvarRascunho(psAtualId, true);

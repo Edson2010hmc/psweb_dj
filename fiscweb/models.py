@@ -5,8 +5,21 @@ from django.db import models
 from django.core.validators import RegexValidator
 from django.utils import timezone
 from datetime import datetime, timedelta
+from django.db.models.signals import post_delete
+from django.dispatch import receiver
 
-#====================================================FUNÇÃO DE TRATAMENTO DOS ARQUIVOS ANEXOS================================================
+#================== SIGNAL PARA DELETAR ANEXOS DE REGISTROS EXCLUIDOS==================
+@receiver(post_delete)
+def deletar_arquivos_anexos(sender, instance, **kwargs):
+    # Verifica todos os campos FileField do modelo
+    for field in instance._meta.get_fields():
+        if isinstance(field, models.FileField):
+            arquivo = getattr(instance, field.name)
+            if arquivo:
+                if os.path.isfile(arquivo.path):
+                    os.remove(arquivo.path)
+
+#=================================FUNÇÃO DE TRATAMENTO DOS ARQUIVOS ANEXOS================================================
 def caminho_PS(instance, filename):
         """Função genérica que encontra PassServ automaticamente"""
         
@@ -33,7 +46,7 @@ def caminho_PS(instance, filename):
         
         return f"storage/PS/{barco}/{ano}/{folder}/{nome_arquivo}"
  
-#================================================TABELAS DE APOIO - MODELO MODAL BARCO==============================================#
+#=================================TABELAS DE APOIO - MODELO MODAL BARCO==============================================#
 class ModalBarco(models.Model):
     """Modelo para cadastro de Modais de barcos """
        
@@ -45,7 +58,6 @@ class ModalBarco(models.Model):
     class Meta:
         verbose_name = 'Modal'
         verbose_name_plural = "Modais"
-
 
 #==================================MODELO FISCAIS CADASTRO================================================#
 class FiscaisCad(models.Model):
@@ -73,7 +85,6 @@ class FiscaisCad(models.Model):
     
     def __str__(self):
         return self.nome
-    
 
 #==================================MODELO BARCOS CADASTRO================================================#
 class BarcosCad(models.Model):
@@ -116,8 +127,6 @@ class BarcosCad(models.Model):
 
         super().save(*args, **kwargs)
     
-
-
 #=================================1 MODELO PASSAGENS DE SERVIÇO================================================#
 class PassServ(models.Model):
     """Modelo para cadastro de Passagem de Serviço"""
@@ -150,7 +159,6 @@ class PassServ(models.Model):
     def __str__(self):
         return f"{self.numPS} - {self.BarcoPS} - {self.dataEmissaoPS}"
         
-
 #=================================1.1 =MODELO PORTO TROCA DE TURMA===============================================
 class PortoTrocaTurma(models.Model):
     """Modelo para cadastro de Passagem de Serviço - Porto"""
@@ -160,7 +168,7 @@ class PortoTrocaTurma(models.Model):
     Porto = models.CharField(max_length=40,verbose_name='Porto')
     Terminal = models.CharField(max_length=40,verbose_name='Terminal')
     OrdSerPorto = models.CharField(max_length=12,verbose_name='Ordem de Serviço')
-    AtracPorto = models.DateField(verbose_name='Horario da Atracação')
+    AtracPorto = models.TimeField(verbose_name='Horario da Atracação')
     DuracPorto = models.CharField(max_length=6,verbose_name='Duração da estadia(h)')
     ObservPorto = models.TextField(max_length=500,verbose_name='Observações', blank=True)
     class Meta:
@@ -171,8 +179,6 @@ class PortoTrocaTurma(models.Model):
     def __str__(self):
         return f"{self.idxPortoTT} - {self.Porto}"
     
-
-
 #================================1.2 MODELO PORTO MANUTENÇÃO PREVENTIVA===============================================
 class PortoManutPrev(models.Model):
     """Modelo para cadastro de Passagem de Serviço - Manutenção Preventiva - porto"""
@@ -197,7 +203,6 @@ class PortoManutPrev(models.Model):
     def __str__(self):
         return f"{self.idxPortoMP} - {self.OrdSerManutPrev}"
     
-
 #=================================1.3 MODELO PORTO ABASTECIMENTO===============================================
 class PortoAbast(models.Model):
     """Modelo para cadastro de Passagem de Serviço - Abastecimento - porto"""
@@ -225,7 +230,6 @@ class PortoAbast(models.Model):
     def __str__(self):
         return f"{self.idxPortoAB} - {self.OrdSerAbast}"
     
-
 #=================================1.4 MODELO INSPEÇÕES NORMATIVAS===============================================
 class PortoInspNorm(models.Model):
     """Modelo para cadastro de Passagem de Serviço - Inspeções Normativas - porto"""
@@ -245,7 +249,7 @@ class PortoInspNorm(models.Model):
     
 #=================================SUB TABELA INSPEÇÕES NORMATIVAS ===============================================
 class subTabPortoInspNorm(models.Model):
-    """Modelo para cadastro de Passagem de Serviço - Inspeções Petrobras - porto"""
+    """Modelo para cadastro de Passagem de Serviço - Inspeções Normativas - porto"""
 
     inspNormDescChoices = [
                             ('anvisa' , 'ANVISA'),
@@ -260,13 +264,12 @@ class subTabPortoInspNorm(models.Model):
     
     class Meta:
         verbose_name = 'Lista Inspeção Normativa - Porto'
-        verbose_name_plural = 'Lista Inspeções Petrobras - Portos'
+        verbose_name_plural = 'Lista Inspeções Normativas - Portos'
         ordering = ['idxsubTabPortoInspNorm__idxPortoIN__BarcoPS','-idxsubTabPortoInspNorm__idxPortoIN__numPS']  
 
     def __str__(self):
         return f"{self.idxsubTabPortoInspNorm} - {self.DescInspNorm}"
-
-    
+ 
 #==================================1.5 MODELO INSPEÇÕES PETROBRAS===============================================
 class PortoInspPetr(models.Model):
     """Modelo para cadastro de Passagem de Serviço - Inspeções Petrobras - porto"""
@@ -309,8 +312,7 @@ class subTabPortoInspPetr(models.Model):
     def __str__(self):
         return f"{self.idxsubTabPortoIP} - {self.DescInspPetr}"
 
-
-#==========================================================1.6 MODELO EMBARQUE EQUIPES===============================================
+#=================================1.6 MODELO EMBARQUE EQUIPES===============================================
 class PortoEmbEquip(models.Model):
     """Modelo para cadastro de Passagem de Serviço - Embarque Equipes - porto"""
 
@@ -327,7 +329,7 @@ class PortoEmbEquip(models.Model):
     def __str__(self):
         return f"{self.idxPortoEE} - {self.idxPortoEE.numPS}"
     
-#=========================================SUB TABELA EMBARQUE EQUIPES==============================
+#=================================SUB TABELA EMBARQUE EQUIPES==============================
 class subTabPortoEmbEquip(models.Model):
     """Modelo para cadastro de Passagem de Serviço - Embarque Equipes - porto"""
 
@@ -356,8 +358,7 @@ class subTabPortoEmbEquip(models.Model):
     def __str__(self):
         return f"{self.idxSubTabPortoEE} - {self.DescEmbEquip}"
 
-
-#========================================1.7 MODELO EMBARQUE MATERIAIS===============================================
+#=================================1.7 MODELO EMBARQUE MATERIAIS===============================================
 class PortoEmbMat(models.Model):
     """Modelo para cadastro de Passagem de Serviço - Embarque de Materiais - porto"""
 
@@ -375,7 +376,7 @@ class PortoEmbMat(models.Model):
     def __str__(self):
         return f"{self.idxPortoEM} - {self.idxPortoEM.numPS}"
     
-#==========================================SUB TABELA EMBARQUE MATERIAIS==============================================
+#=================================SUB TABELA EMBARQUE MATERIAIS==============================================
 class subTabPortoEmbMat(models.Model):
     """Modelo para cadastro de Passagem de Serviço - Embarque de Materiais - porto"""
 
@@ -407,9 +408,7 @@ class subTabPortoEmbMat(models.Model):
     def __str__(self):
         return f"{self.tipoMatEmb} - {self.RtEmbMat}"
 
-
-
-#========================================1.8 MODELO DESEMBARQUE MATERIAIS===============================================
+#=================================1.8 MODELO DESEMBARQUE MATERIAIS===============================================
 class PortoDesMat(models.Model):
     """Modelo para cadastro de Passagem de Serviço - Desembarque de Materiais - porto"""
 
@@ -431,9 +430,8 @@ class PortoDesMat(models.Model):
 
     def __str__(self):
         return f"{self.idxPortoDM} - {self.RtDesMat}"
-    
 
-#========================================1.9 MODELO MOBILIZAÇÃO DESMOBILIZAÇÃO===============================================
+#=============================== =1.9 MODELO MOBILIZAÇÃO DESMOBILIZAÇÃO===============================================
 class PortoMobD(models.Model):
     """Modelo para cadastro de Passagem de Serviço - Operações de Mobilização e desmobilização - Porto"""
 
@@ -451,10 +449,8 @@ class PortoMobD(models.Model):
 
     def __str__(self):
         return f"{self.idxPortoMobD} - {self.OsMobD}"
-    
-
-
-#===========================================================2.0 MODELO ANOMALIAS E CORRENCIAS DE SMS===========================================
+ 
+#================================2.0 MODELO ANOMALIAS E CORRENCIAS DE SMS===========================================
 class anocSMS(models.Model):
     """Modelo para cadastro de Passagem de Serviço - Anomalias e Ocorrencias de SMS"""
 
@@ -484,9 +480,8 @@ class anocSMS(models.Model):
 
     def __str__(self):
         return f"{self.idxanocSMS} - {self.classnocSMS}" 
-    
 
-#===========================================================3 MODELO INOPERANCIAS PENDENCIAS E ASSUNTOS CONTRATUAIS===========================================
+#================================3 MODELO INOPERANCIAS PENDENCIAS E ASSUNTOS CONTRATUAIS===========================================
 class inoPendContr(models.Model):
     """Modelo para cadastro de Passagem de Serviço - Inoperâncias Pendências e assuntos Contratuais"""
 
@@ -568,9 +563,8 @@ class iapo(models.Model):
         super().save(*args, **kwargs)
 
 
-
-#-==========================================================4.2 SMS===================================================
-#===========================================================4.2.1 LV de Mangueiras====================================
+#-===============================4.2 SMS===================================================
+#================================4.2.1 LV de Mangueiras====================================
 
 class smsLvMang(models.Model):
     """Modelo para cadastro de Passagem de Serviço - LV de Mangueiras - SMS"""
@@ -599,7 +593,7 @@ class smsLvMang(models.Model):
         
 
 
-#===========================================================4.2.2 LV de Segurança====================================
+#================================4.2.2 LV de Segurança====================================
 
 class smsLvSeg(models.Model):
     """Modelo para cadastro de Passagem de Serviço - LV de Segurança - SMS"""

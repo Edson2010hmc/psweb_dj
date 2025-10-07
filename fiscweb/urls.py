@@ -29,6 +29,14 @@ urlpatterns = [
     path('api/passagens/<int:ps_id>/', views.passagem_detail, name='passagem_detail'),
     path('api/passagens/usuario/', views.listar_passagens_usuario, name='listar_passagens_usuario'),
 
+    # API Troca de Turma
+    path('api/ps/<int:ps_id>/troca-turma/', views.porto_troca_turma_list, name='porto_troca_turma_list'),
+    path('api/troca-turma/<int:troca_turma_id>/', views.porto_troca_turma_detail, name='porto_troca_turma_detail'),
+
+    # API Manutenção Preventiva
+    path('api/ps/<int:ps_id>/manut-prev/', views.porto_manut_prev_list, name='porto_manut_prev_list'),
+    path('api/manut-prev/<int:manut_prev_id>/', views.porto_manut_prev_detail, name='porto_manut_prev_detail'),
+
 
     # API Inspeção Normativa (Principal)
     path('api/ps/<int:ps_id>/insp-norm/', views.porto_insp_norm_list, name='porto_insp_norm_list'),

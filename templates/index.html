@@ -131,28 +131,35 @@
     <span>1.2 Manutenção Preventiva</span>
     <span class="toggle">▼</span>
   </div>
-  <div class="accordion-content" id="acc-manutprev">
-    <div class="col">
-      <label style="display:inline-flex;align-items:center;gap:6px;white-space:nowrap;margin-bottom:8px;">
-        <input id="mpNaoPrevisto" type="checkbox">
-        Não previsto para esse porto
-      </label>
-        
-        
-<div style="display:flex; gap:12px; align-items:flex-start;">
-  <div style="flex:0 0 auto;">
-    <label>Franquia solicitada (min)</label><input id="mpFranquia" type="number" step="1" min="0" style="width:160px;">
-  </div>
-  <div style="flex:0 0 auto;">
-    <label>Saldo de franquia (min)</label> <input id="mpSaldo" type="number" step="1" min="0"style="width:160px;">
-  </div>
-</div>
+<div class="accordion-content" id="acc-manutprev">
+  <div class="col">
+    <label style="display:inline-flex;align-items:center;gap:6px;white-space:nowrap;margin-bottom:8px;">
+      <input id="mpNaoPrevisto" type="checkbox">
+      Não previsto para esse porto
+    </label>
+    
+    <div id="containerCamposManutPrev" style="display:block;">
+      <div style="display:flex; gap:12px; align-items:flex-start;">
+        <div style="flex:0 0 auto;">
+          <label>Franquia solicitada (min)</label><input id="mpFranquia" type="number" step="1" min="0" style="width:160px;">
+        </div>
+        <div style="flex:0 0 auto;">
+          <label>Saldo de franquia (min)</label> <input id="mpSaldo" type="number" step="1" min="0" style="width:160px;">
+        </div>
+      </div>
 
-        <label>OS</label><input id="mpOS" type="text" maxlength="50" style="width:160px;">
-        <label>RADE (anexo)</label><input id="mpRADE" type="file" style="width:400px" accept="application/pdf,image/*">
-        <label>Observações</label><textarea id="mpObs" maxlength="4000" rows="8" style="width:100%;resize:vertical;overflow:auto;"></textarea>
+      <label>OS</label><input id="mpOS" type="text" maxlength="50" style="width:160px;">
+      
+      <label>RADE (anexo)</label>
+      <div style="display:flex; align-items:center; gap:10px;">
+        <input id="mpRADE" type="file" style="width:400px" accept="application/pdf,image/*">
+        <span id="linkDownloadRade"></span>
+      </div>
+      
+      <label>Observações</label><textarea id="mpObs" maxlength="4000" rows="8" style="width:100%;resize:vertical;overflow:auto;"></textarea>
     </div>
   </div>
+</div>
 </div>
 
 <!-- 1.3 Abastecimento -->
@@ -243,7 +250,6 @@
     </div>
   </div>
 </div>
-
 
 <!-- 1.6 Inspeções/Auditorias Petrobras -->
 <div class="accordion-item">
@@ -586,6 +592,8 @@
  <script src="/static/js/fiscais.js"></script>
  <script src="/static/js/embarcacoes.js"></script>
  <script src="/static/js/passagens.js"></script>
+ <script src="/static/js/troca-turma.js"></script>
+ <script src="/static/js/manut-prev.js"></script>
  <script src="/static/js/insp-norm.js"></script> 
  <script src="/static/js/app.js"></script>
 </body>
