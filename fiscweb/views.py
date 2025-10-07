@@ -252,7 +252,7 @@ def fiscais_detail(request, fiscal_id):
                 'error': str(e)
             }, status=400)
         
-
+        
 #================================================CADASTRO FISCAIS - API REST - USUARIOS COM PERFIL DE FISCAL=================================================
 @csrf_exempt
 @require_http_methods(["GET"])
@@ -276,7 +276,6 @@ def fiscais_perfil_fiscal(request):
             'success': False,
             'error': str(e)
         }, status=500)
-
 
 
 #================================================CADASTRO BARCOS - API REST=================================================
@@ -480,7 +479,6 @@ def barcos_detail(request, barco_id):
                 'success': False,
                 'error': str(e)
             }, status=400)
-
 
 
 #================================================ENDPOINTS DE CHOICES E LISTAS=================================================
@@ -868,6 +866,160 @@ def listar_passagens_usuario(request):
             'success': False,
             'error': str(e)
         }, status=500)
+
+#================================================INSPEÇÃO NORMATIVA (PRINCIPAL) - API REST=================================================
+@csrf_exempt
+@require_http_methods(["GET", "POST"])
+def porto_insp_norm_list(request, ps_id):
+    """
+    GET: Retorna inspeção normativa de uma PS (se existir)
+    POST: Cria nova inspeção normativa para uma PS
+    """
+    
+    # Verificar se PS existe
+    try:
+        ps = PassServ.objects.get(id=ps_id)
+    except PassServ.DoesNotExist:
+        print(f"[API ERROR] PS ID {ps_id} não encontrada")
+        return JsonResponse({
+            'success': False,
+            'error': 'Passagem de Serviço não encontrada'
+        }, status=404)
+    
+    if request.method == 'GET':
+        try:
+            insp_norm = PortoInspNorm.objects.filter(idxPortoIN=ps).first()
+            
+            if not insp_norm:
+                print(f"[API] GET /ps/{ps_id}/insp-norm/ - Nenhuma inspeção encontrada")
+                return JsonResponse({
+                    'success': True,
+                    'data': None
+                })
+            
+            print(f"[API] GET /ps/{ps_id}/insp-norm/ - Retornando inspeção ID {insp_norm.id}")
+            
+            return JsonResponse({
+                'success': True,
+                'data': {
+                    'id': insp_norm.id,
+                    'prevInsNorm': insp_norm.prevInsNorm,
+                    'ObservInspNorm': insp_norm.ObservInspNorm
+                }
+            })
+            
+        except Exception as e:
+            print(f"[API ERROR] GET /ps/{ps_id}/insp-norm/ - {str(e)}")
+            return JsonResponse({
+                'success': False,
+                'error': str(e)
+            }, status=500)
+    
+    elif request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            
+            # Verificar se já existe
+            insp_existente = PortoInspNorm.objects.filter(idxPortoIN=ps).first()
+            if insp_existente:
+                print(f"[API ERROR] POST /ps/{ps_id}/insp-norm/ - Já existe inspeção para esta PS")
+                return JsonResponse({
+                    'success': False,
+                    'error': 'Já existe inspeção normativa para esta PS'
+                }, status=400)
+            
+            print(f"[API] POST /ps/{ps_id}/insp-norm/ - Criando inspeção")
+            
+            insp_norm = PortoInspNorm.objects.create(
+                idxPortoIN=ps,
+                prevInsNorm=data.get('prevInsNorm', False),
+                ObservInspNorm=data.get('ObservInspNorm', '')
+            )
+            
+            print(f"[API] POST /ps/{ps_id}/insp-norm/ - Inspeção criada com ID: {insp_norm.id}")
+            
+            return JsonResponse({
+                'success': True,
+                'message': 'Inspeção Normativa criada com sucesso',
+                'data': {
+                    'id': insp_norm.id,
+                    'prevInsNorm': insp_norm.prevInsNorm,
+                    'ObservInspNorm': insp_norm.ObservInspNorm
+                }
+            }, status=201)
+            
+        except Exception as e:
+            print(f"[API ERROR] POST /ps/{ps_id}/insp-norm/ - {str(e)}")
+            return JsonResponse({
+                'success': False,
+                'error': str(e)
+            }, status=400)
+
+@csrf_exempt
+@require_http_methods(["PUT", "DELETE"])
+def porto_insp_norm_detail(request, insp_norm_id):
+    """
+    PUT: Atualiza inspeção normativa
+    DELETE: Remove inspeção normativa
+    """
+    
+    try:
+        insp_norm = PortoInspNorm.objects.get(id=insp_norm_id)
+    except PortoInspNorm.DoesNotExist:
+        print(f"[API ERROR] Inspeção Normativa ID {insp_norm_id} não encontrada")
+        return JsonResponse({
+            'success': False,
+            'error': 'Inspeção Normativa não encontrada'
+        }, status=404)
+    
+    if request.method == 'PUT':
+        try:
+            data = json.loads(request.body)
+            
+            print(f"[API] PUT /insp-norm/{insp_norm_id}/ - Atualizando inspeção")
+            
+            insp_norm.prevInsNorm = data.get('prevInsNorm', insp_norm.prevInsNorm)
+            insp_norm.ObservInspNorm = data.get('ObservInspNorm', insp_norm.ObservInspNorm)
+            insp_norm.save()
+            
+            print(f"[API] PUT /insp-norm/{insp_norm_id}/ - Inspeção atualizada")
+            
+            return JsonResponse({
+                'success': True,
+                'message': 'Inspeção Normativa atualizada com sucesso',
+                'data': {
+                    'id': insp_norm.id,
+                    'prevInsNorm': insp_norm.prevInsNorm,
+                    'ObservInspNorm': insp_norm.ObservInspNorm
+                }
+            })
+            
+        except Exception as e:
+            print(f"[API ERROR] PUT /insp-norm/{insp_norm_id}/ - {str(e)}")
+            return JsonResponse({
+                'success': False,
+                'error': str(e)
+            }, status=400)
+    
+    elif request.method == 'DELETE':
+        try:
+            # Ao deletar, remove também todos os itens da subtabela (CASCADE)
+            insp_norm.delete()
+            
+            print(f"[API] DELETE /insp-norm/{insp_norm_id}/ - Inspeção removida")
+            
+            return JsonResponse({
+                'success': True,
+                'message': 'Inspeção Normativa removida com sucesso'
+            })
+            
+        except Exception as e:
+            print(f"[API ERROR] DELETE /insp-norm/{insp_norm_id}/ - {str(e)}")
+            return JsonResponse({
+                'success': False,
+                'error': str(e)
+            }, status=400)
+
 
 #================================================INSPEÇÃO NORMATIVA - SUBTABELA - API REST=================================================
 @csrf_exempt
