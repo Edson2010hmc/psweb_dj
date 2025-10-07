@@ -213,6 +213,7 @@ class PortoAbast(models.Model):
     QuantAbast = models.IntegerField(verbose_name='Quantidade (m³)')
     DuracPrev = models.IntegerField(verbose_name='Duração Prevista(h)')
     UltAbast = models.DateField(verbose_name='Último Abastecimento')
+    QuantUltAbast = models.IntegerField(verbose_name='Quantidade Ultimo Abastecimento (m³)')
     Anexos = models.FileField(upload_to=caminho_PS,verbose_name='Anexos')
     ObservManPrev = models.TextField(max_length=500, verbose_name='Observações', blank=True)
     
@@ -229,21 +230,11 @@ class PortoAbast(models.Model):
 class PortoInspNorm(models.Model):
     """Modelo para cadastro de Passagem de Serviço - Inspeções Normativas - porto"""
 
-    inspNormDescChoices = [
-                            ('anvisa' , 'ANVISA'),
-                            ('classe' , 'CLASSE'),
-                            ('marinha','MARINHA'),
-                            ('outros' , 'OUTROS'),
-                                                  ]
-
+ 
     idxPortoIN = models.ForeignKey(PassServ, on_delete=models.CASCADE)
-
     prevInsNorm = models.BooleanField(default=False, verbose_name='Inspeção Normativa?')
-
-    DescInspNorm = models.CharField(max_length=9,choices=inspNormDescChoices,verbose_name='Inspeções Normativas')
-    OrdSerInspNorm = models.CharField(max_length=12, verbose_name='Ordem de Serviço')
     ObservInspNorm = models.TextField(max_length=500, verbose_name='Observações', blank=True)
-    
+   
     class Meta:
         verbose_name = 'Inspeção Normativa - Porto'
         verbose_name_plural = 'Inspeções Normativas - Portos'
@@ -252,25 +243,36 @@ class PortoInspNorm(models.Model):
     def __str__(self):
         return f"{self.idxPortoIN} - {self.DescInspNorm}"
     
+#=================================SUB TABELA INSPEÇÕES NORMATIVAS ===============================================
+class subTabPortoInspNorm(models.Model):
+    """Modelo para cadastro de Passagem de Serviço - Inspeções Petrobras - porto"""
+
+    inspNormDescChoices = [
+                            ('anvisa' , 'ANVISA'),
+                            ('classe' , 'CLASSE'),
+                            ('marinha','MARINHA'),
+                            ('outros' , 'OUTROS'),
+                                                  ]
+
+    idxsubTabPortoInspNorm = models.ForeignKey(PortoInspNorm, on_delete=models.CASCADE)
+    DescInspNorm = models.CharField(max_length=9,choices=inspNormDescChoices,verbose_name='Inspeções Normativas')
+    OrdSerInspNorm = models.CharField(max_length=12, verbose_name='Ordem de Serviço')
+    
+    class Meta:
+        verbose_name = 'Lista Inspeção Normativa - Porto'
+        verbose_name_plural = 'Lista Inspeções Petrobras - Portos'
+        ordering = ['idxsubTabPortoInspNorm__idxPortoIP__BarcoPS','-idxsubTabPortoInspNorm__idxPortoIP__numPS']  
+
+    def __str__(self):
+        return f"{self.idxsubTabPortoInspNorm} - {self.DescInspNorm}"
+
+    
 #==========================================================1.5 MODELO INSPEÇÕES PETROBRAS===============================================
 class PortoInspPetr(models.Model):
     """Modelo para cadastro de Passagem de Serviço - Inspeções Petrobras - porto"""
 
-    inspPetrDescChoices = [
-                            ('gsopsms'  ,'GSOP/SMS'),
-                            ('gercontr' ,'GERENCIA CONTRATO'),
-                            ('geroper'  ,'GERENTE OPERACIONAL'),
-                            ('sto'      ,'STO'),
-                            ('outros'   ,'OUTROS'),
-                          ]
-
     idxPortoIP = models.ForeignKey(PassServ, on_delete=models.CASCADE)
-
     prevInspPetr = models.BooleanField(default=False, verbose_name='Inspeção Petrobras?')
-
-    DescInspPetr = models.CharField(max_length=9,choices=inspPetrDescChoices,verbose_name='Inspeções Petrobras')
-    auditorPetr = models.CharField(max_length=30, verbose_name='Auditor/Visitante')
-    gerAuditorPetr = models.CharField(max_length=30, verbose_name='Gerencia')
     ObservInspPetr = models.TextField(max_length=500, verbose_name='Observações', blank=True)
     
     class Meta:
@@ -281,6 +283,32 @@ class PortoInspPetr(models.Model):
     def __str__(self):
         return f"{self.idxPortoIP} - {self.DescInspPetr}"
     
+#=================================SUB TABELA INSPEÇÕES PETROBRAS ===============================================
+class subTabPortoInspPetr(models.Model):
+    """Modelo para cadastro de Passagem de Serviço - Inspeções Petrobras - porto"""
+
+    inspPetrDescChoices = [
+                            ('GSOP/SMS' ,'GSOP/SMS'),
+                            ('GERENCIA CONTRATO' ,'GERENCIA CONTRATO'),
+                            ('STEE' ,'STEE'),
+                            ('GERENTE MIS'  ,'GERENTE MIS'),
+                            ('STO MIS'      ,'STO MIS'),
+                            ('OUTROS'   ,'OUTROS'),
+                          ]
+
+    idxsubTabPortoIP = models.ForeignKey(PortoInspPetr, on_delete=models.CASCADE)
+    DescInspPetr = models.CharField(max_length=9,choices=inspPetrDescChoices,verbose_name='Descrição da visita')
+    auditorPetr = models.CharField(max_length=30, verbose_name='Auditor/Visitante')
+    gerAuditorPetr = models.CharField(max_length=30, verbose_name='Gerencia')
+        
+    class Meta:
+        verbose_name = 'Lista Inspeção Petrobras - Porto'
+        verbose_name_plural = 'Lista Inspeções Petrobras - Portos'
+        ordering = ['idxsubTabPortoIP__idxPortoIP__BarcoPS','-idxsubTabPortoIP__idxPortoIP__numPS']  
+
+    def __str__(self):
+        return f"{self.idxsubTabPortoIP} - {self.DescInspPetr}"
+
 
 #==========================================================1.6 MODELO EMBARQUE EQUIPES===============================================
 class PortoEmbEquip(models.Model):
@@ -313,21 +341,47 @@ class PortoEmbEquip(models.Model):
     def __str__(self):
         return f"{self.idxPortoEE} - {self.DescEmbEquip}"
     
+#====SUB TABELA EMBARQUE EQUIPES==============================================
+
+class subTabPortoEmbEquip(models.Model):
+    """Modelo para cadastro de Passagem de Serviço - Embarque Equipes - porto"""
+
+    EmbEquipDescChoices = [
+                            ('crd'     ,'CRD'),
+                            ('stc'     ,'STC'),
+                            ('eqse'    ,'EQSE'),
+                            ('sto'     ,'STO'),
+                            ('cenpes'  ,'CENPES'),
+                            ('ambient' ,'AMBIENTAÇÃO'),
+                            ('outros'   ,'OUTROS'),
+                          ]
+
+    idxSubTabPortoEE = models.ForeignKey(PortoEmbEquip, on_delete=models.CASCADE)
+
+    DescEmbEquip = models.CharField(max_length=9,choices=EmbEquipDescChoices,verbose_name='Descrição')
+    equipNome = models.CharField(max_length=30, verbose_name='Nome')
+    equipFuncao = models.CharField(max_length=30, verbose_name='Função')
+    equipEmpre = models.CharField(max_length=30, verbose_name='Empresa')
+    
+    class Meta:
+        verbose_name = 'Lista Embarque Equipe - Porto'
+        verbose_name_plural = 'Lista Embarque Equipes - Portos'
+        ordering = ['idxSubTabPortoEE__idxPortoEE','-idxSubTabPortoEE__idxPortoEE__numPS']  
+
+    def __str__(self):
+        return f"{self.idxSubTabPortoEE} - {self.DescEmbEquip}"
+
+
 
 #==========================================================1.7 MODELO EMBARQUE MATERIAIS===============================================
 class PortoEmbMat(models.Model):
     """Modelo para cadastro de Passagem de Serviço - Embarque de Materiais - porto"""
 
-    PASTA_UPLOAD = 'EmbMaterial'
-
+ 
     idxPortoEM = models.ForeignKey(PassServ, on_delete=models.CASCADE)
-
     prevEmbMat = models.BooleanField(default=False, verbose_name='Embarque de Materiais?')
-
-    OsEmbMat = models.CharField(max_length=12,verbose_name='OS de Destino')
-    RtEmbMat = models.CharField(max_length=12, verbose_name='Num RT')
     ObservEmbMat = models.TextField(max_length=200, verbose_name='Observações', blank=True)
-    Anexos = models.FileField(upload_to=caminho_PS,verbose_name='Anexo')
+   
 
     class Meta:
         verbose_name = 'Embarque Material - Porto'
@@ -337,6 +391,40 @@ class PortoEmbMat(models.Model):
     def __str__(self):
         return f"{self.idxPortoEM} - {self.RtEmbMat}"
     
+#==========================================SUB TABELA EMBARQUE MATERIAIS==============================================
+
+class subTabPortoEmbMat(models.Model):
+    """Modelo para cadastro de Passagem de Serviço - Embarque de Materiais - porto"""
+
+    PASTA_UPLOAD = 'EmbMaterial'
+
+    subTabPortoEmbMatChoices = [
+                            ('MATERIAIS OP CRD'     ,'MATERIAIS OP CRD'),
+                            ('MATERIAIS OP MIS'     ,'MATERIAIS OP MIS'),
+                            ('CONTENTORES'          ,'CONTENTORES'),
+                            ('FERRAMENTAS'          ,'FERRAMENTAS'),
+                            ('MATERIAIS EQSE'       ,'MATERIAIS EQSE'),
+                            ('OUTROS'               ,'OUTROS'),
+                             ]
+
+    idxSubTabPortoEM = models.ForeignKey(PortoEmbMat, on_delete=models.CASCADE)
+    tipoMatEmb = models.CharField(max_length=30, choices=subTabPortoEmbMatChoices,verbose_name='Tipo de Material')
+    numSerMatEmb = models.CharField(max_length=30, verbose_name='Identificador ou Num Serie do Material')
+    matEmbDesc = models.CharField(max_length=300, verbose_name='Descrição do Material')
+    dataValCertLing= models.DateField(verbose_name='Data Validade Certificado Lingada-Olhais')
+    OsEmbMat = models.CharField(max_length=12,verbose_name='OS de Destino')
+    RtEmbMat = models.CharField(max_length=14, verbose_name='Num RT')
+    Anexos = models.FileField(upload_to=caminho_PS,verbose_name='Anexo')
+
+    class Meta:
+        verbose_name = 'Lista Embarque Material - Porto'
+        verbose_name_plural = 'Lista Embarque Materiais - Portos'
+        ordering = ['idxSubTabPortoEM__idxPortoEM__BarcoPS','-idxSubTabPortoEM__idxPortoEM__numPS']  
+
+    def __str__(self):
+        return f"{self.tipoMatEmb} - {self.RtEmbMat}"
+
+
 
 #==========================================================1.8 MODELO DESEMBARQUE MATERIAIS===============================================
 class PortoDesMat(models.Model):

@@ -80,8 +80,11 @@
 
 <!---------------SEÇÃO PORTO-------------------------------------------------------------------------------------------------------->
 <!---------------SEÇÃO PORTO EM FORMATO ACCORDION-------------------------------------------------------------------------------------------------------->
-<div class="subtab active" id="sub-porto">
 
+
+    
+<div class="subtab active" id="sub-porto">
+<div class="card"><h2>Passagem de serviço  1-PORTO</h2></div>
 <!-- 1.1 Troca de Turma -->
 <div class="accordion-item">
   <div class="accordion-header" data-target="trocaturma">
@@ -90,11 +93,33 @@
   </div>
   <div class="accordion-content" id="acc-trocaturma">
     <div class="col">
-      <label>Porto *</label><input id="ttPorto" type="text" maxlength="100">
-      <label>Terminal *</label><input id="ttTerminal" type="text" maxlength="100">
+      
+  <div style="display:flex; gap:12px; align-items:flex-start;">
+  <div style="flex:0 0 auto;">
+    <label>Porto *</label><input id="ttPorto" type="text" maxlength="100" style="width:400px;">
+  </div>
+  <div style="flex:0 0 auto;">
+    <label>Terminal *</label><input id="ttTerminal" type="text" maxlength="100" style="width:400px;">
+  </div>
+</div>
+         
       <label>OS *</label><input id="ttOS" type="text" maxlength="50" style="width:160px;">
-      <label>Atracação (hh:mm) *</label><input width="100" id="ttAtracacao" type="time" style="width:100px;">
-      <label>Duração (min) *</label><input id="ttDuracao" type="number" step="0.01" min="0" style="width:100px;">
+      
+    <div style="display:flex; gap:12px; align-items:flex-start;">
+  <div style="flex:0 0 auto;">
+    <label>Atracação (hh:mm) *</label><input width="100" id="ttAtracacao" type="time" style="width:100px;">
+  </div>
+  <div style="flex:0 0 auto;">
+    <label>Duração *</label><input id="ttDuracao" type="number" step="1" min="0" style="width:100px;">
+  
+  </div>
+</div>
+  
+  
+  
+  
+  
+  
       <label>Observações</label><textarea id="ttObs" maxlength="4000" rows="8" style="width:100%;resize:vertical;overflow:auto;"></textarea>
     </div>
   </div>
@@ -112,35 +137,20 @@
         <input id="mpNaoPrevisto" type="checkbox">
         Não previsto para esse porto
       </label>
-      
-      <div style="margin-bottom:8px;">
-        <label>Franquia solicitada (min)</label>
-        <div style="display:flex;align-items:center;gap:8px;flex-wrap:nowrap;">
-          <input id="mpFranquia" type="number" step="1" min="0" style="width:160px;">
-          <label style="display:inline-flex;align-items:center;gap:6px;white-space:nowrap;margin:0;">
-            <input id="mpNaoSolicitada" type="checkbox"> Não solicitada
-          </label>
-        </div>
-      </div>
-      
-      <div style="margin-bottom:8px;">
-        <label>OS</label>
-        <div style="display:flex;align-items:center;gap:8px;flex-wrap:nowrap;">
-          <input id="mpOS" type="text" maxlength="50" style="width:160px;">
-          <label style="display:inline-flex;align-items:center;gap:6px;white-space:nowrap;margin:0;">
-            <input id="mpNaoProgramada" type="checkbox"> Não programada
-          </label>
-        </div>
-      </div>
+        
+        
+<div style="display:flex; gap:12px; align-items:flex-start;">
+  <div style="flex:0 0 auto;">
+    <label>Franquia solicitada (min)</label><input id="mpFranquia" type="number" step="1" min="0" style="width:160px;">
+  </div>
+  <div style="flex:0 0 auto;">
+    <label>Saldo de franquia (min)</label> <input id="mpSaldo" type="number" step="1" min="0"style="width:160px;">
+  </div>
+</div>
 
-      <label>Saldo de franquia (min)</label>
-      <input id="mpSaldo" type="number" step="1" min="0"style="width:100px;">
-
-      <label>RADE (anexo)</label>
-      <input id="mpRADE" type="file" accept="application/pdf,image/*">
-
-      <label>Observações</label>
-      <textarea id="mpObs" maxlength="4000" rows="8" style="width:100%;resize:vertical;overflow:auto;"></textarea>
+        <label>OS</label><input id="mpOS" type="text" maxlength="50" style="width:160px;">
+        <label>RADE (anexo)</label><input id="mpRADE" type="file" style="width:400px" accept="application/pdf,image/*">
+        <label>Observações</label><textarea id="mpObs" maxlength="4000" rows="8" style="width:100%;resize:vertical;overflow:auto;"></textarea>
     </div>
   </div>
 </div>
@@ -154,21 +164,46 @@
   <div class="accordion-content" id="acc-abastecimento">
     <div class="col">
       <label style="display:inline-flex;align-items:center;gap:6px;white-space:nowrap;margin-bottom:8px;">
-        <input id="abNaoPrevisto" type="checkbox"> Não previsto para esse porto
+      <input id="abNaoPrevisto" type="checkbox"> Não previsto para esse porto
       </label>
       <label>OS</label><input id="abOS" type="text" maxlength="50" style="width:160px;">
-      <label>Quantidade (m³)</label><input id="abQtd" type="number" step="1" min="0" style="width:100px;">
-      <label>Duração (min)</label><input id="abDuracao" type="number" step="1" min="0" style="width:100px;">
-      <label>Anexo</label><input id="abAnexo" type="file">
+
+   <div style="display:flex; gap:12px; align-items:flex-start;">
+  <div style="flex:0 0 auto;">
+    <label>Previsão de Inicio</label>
+    <input type="date" id="prevInicioAbast" style="width:180px;">
+  </div>
+  
+  <div style="flex:0 0 auto;">
+    <label>Qtde. M³</label><input id="abQtd" type="number" step="1" min="0" style="width:100px;">
+  </div>
+  
+  <div style="flex:0 0 auto;">
+    <label>Duração Prevista</label><input id="abDuracao" type="number" step="1" min="0" style="width:100px;">
+  </div>
+</div>
+
+<div style="display:flex; gap:12px; align-items:flex-start;">
+  <div style="flex:0 0 auto;">
+    <label>Último Abastecimento</label><input type="date" id="ultimoAbast" style="width:180px;">
+  </div>
+  
+  <div style="flex:0 0 auto;">
+    <label>Qtde. M³</label><input id="ultAbastQtd" type="number" step="1" min="0" style="width:100px;">
+  </div>
+</div>
+     
+      <div class="col"></div>
+      <label>Anexo</label><input id="abAnexo" style="width:400px" type="file">
       <label>Observações</label><textarea id="abObs" maxlength="4000" rows="8" style="width:100%;resize:vertical;overflow:auto;"></textarea>
     </div>
   </div>
 </div>
 
-<!-- 1.4 Inspeção ANVISA -->
+<!-- 1.4 Inspeção Normativa -->
 <div class="accordion-item">
   <div class="accordion-header" data-target="anvisa">
-    <span>1.4 Inspeção ANVISA</span>
+    <span>1.4 Inspeção Normativa</span>
     <span class="toggle">▼</span>
   </div>
   <div class="accordion-content" id="acc-anvisa">
@@ -176,41 +211,29 @@
       <label style="display:inline-flex;align-items:center;gap:6px;white-space:nowrap;margin-bottom:8px;">
         <input id="anNaoPrevisto" type="checkbox"> Não previsto para esse porto
       </label>
-      <label>OS</label>
-      <input id="anOS" type="text" maxlength="50" style="width:160px;">
-      <label>Descrição</label>
-      <input id="anDesc" type="text" maxlength="500">
+      
+      
+      
+      <div style="display:flex; gap:12px; align-items:flex-start;">
+        <div style="flex:0 0 auto;">
+          <label>Descrição</label><select id="inspNorDesc" style="width:200px;"><option value="">— selecione —</option></select>
+        </div>
+        <div style="flex:0 0 auto;">
+          <label>OS</label><input id="inspNorOS" type="text" maxlength="50" style="width:160px;">
+        </div>
+       </div>
+                  
       <label>Observações</label>
       <textarea id="anObs" maxlength="4000" rows="8" style="width:100%;resize:vertical;overflow:auto;"></textarea>
     </div>
   </div>
 </div>
 
-<!-- 1.5 Inspeção de Classe -->
-<div class="accordion-item">
-  <div class="accordion-header" data-target="classe">
-    <span>1.5 Inspeção de Classe</span>
-    <span class="toggle">▼</span>
-  </div>
-  <div class="accordion-content" id="acc-classe">
-    <div class="col">
-      <label style="display:inline-flex;align-items:center;gap:6px;white-space:nowrap;margin-bottom:8px;">
-        <input id="clNaoPrevisto" type="checkbox"> Não previsto para esse porto
-      </label>
-      <label>OS</label>
-      <input id="clOS" type="text" maxlength="50" style="width:160px;">
-      <label>Descrição</label>
-      <input id="clDesc" type="text" maxlength="500">
-      <label>Observações</label>
-      <textarea id="clObs" maxlength="4000" rows="8" style="width:100%;resize:vertical;overflow:auto;"></textarea>
-    </div>
-  </div>
-</div>
 
 <!-- 1.6 Inspeções/Auditorias Petrobras -->
 <div class="accordion-item">
   <div class="accordion-header" data-target="petrobras">
-    <span>1.6 Inspeções/Auditorias Petrobras</span>
+    <span>1.5 Inspeções/Auditorias Petrobras</span>
     <span class="toggle">▼</span>
   </div>
   <div class="accordion-content" id="acc-petrobras">
@@ -218,20 +241,45 @@
       <label style="display:inline-flex;align-items:center;gap:6px;white-space:nowrap;margin-bottom:8px;">
         <input id="ipNaoPrevisto" type="checkbox"> Não previsto para esse porto
       </label>
-      <label>Auditor</label>
-      <input id="ipAud" type="text" maxlength="200">
-      <label>Gerência</label>
-      <input id="ipGer" type="text" maxlength="200">
+      
+      
+      
+           <div style="display:flex; gap:12px; align-items:flex-start;">
+            <div style="flex:0 0 auto;">
+              <label>Descrição</label><select id="inspPetrDesc" style="width:200px;"><option value="">— selecione —</option></select>
+            </div>
+            <div style="flex:0 0 auto;">
+              <label>OS</label><input id="inspPetrOS" type="text" maxlength="50" style="width:160px;">
+            </div>
+          </div> 
+      
+      
+      
+      
+      
+      
+      
+      <div style="display:flex; gap:12px; align-items:flex-start;">
+            <div style="flex:0 0 auto;">
+              <label>Auditor</label><input id="ipAud" type="text" maxlength="200"style="width:300px;">
+            </div>
+            <div style="flex:0 0 auto;">
+              <label>Gerência</label><input id="ipGer" type="text" maxlength="200"style="width:250px;">
+            </div>
+          </div> 
+      
+      
+      
       <label>Observações</label>
       <textarea id="ipObs" maxlength="4000" rows="8" style="width:100%;resize:vertical;overflow:auto;"></textarea>
     </div>
   </div>
 </div>
 
-<!-- 1.7 Embarque de Equipes -->
+<!-- 1.6 Embarque de Equipes -->
 <div class="accordion-item">
   <div class="accordion-header" data-target="embequipes">
-    <span>1.7 Embarque de Equipes</span>
+    <span>1.6 Embarque de Equipes</span>
     <span class="toggle">▼</span>
   </div>
   <div class="accordion-content" id="acc-embequipes">
@@ -250,10 +298,10 @@
   </div>
 </div>
 
-<!-- 1.8 Embarque de Materiais -->
+<!-- 1.7 Embarque de Materiais -->
 <div class="accordion-item">
   <div class="accordion-header" data-target="embmateriais">
-    <span>1.8 Embarque de Materiais</span>
+    <span>1.7 Embarque de Materiais</span>
     <span class="toggle">▼</span>
   </div>
   <div class="accordion-content" id="acc-embmateriais">
@@ -272,10 +320,10 @@
   </div>
 </div>
 
-<!-- 1.9 Desembarque de Materiais -->
+<!-- 1.8 Desembarque de Materiais -->
 <div class="accordion-item">
   <div class="accordion-header" data-target="desmateriais">
-    <span>1.9 Desembarque de Materiais</span>
+    <span>1.8 Desembarque de Materiais</span>
     <span class="toggle">▼</span>
   </div>
   <div class="accordion-content" id="acc-desmateriais">
@@ -294,10 +342,10 @@
   </div>
 </div>
 
-<!-- 1.10 OS Mobilização/Desmobilização -->
+<!-- 1.9 OS Mobilização/Desmobilização -->
 <div class="accordion-item">
   <div class="accordion-header" data-target="osmobdesm">
-    <span>1.10 OS Mobilização/Desmobilização</span>
+    <span>1.9 OS Mobilização/Desmobilização</span>
     <span class="toggle">▼</span>
   </div>
   <div class="accordion-content" id="acc-osmobdesm">
