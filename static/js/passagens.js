@@ -1,8 +1,9 @@
-// ===== MÓDULO: PASSAGENS DE SERVIÇO ============================
+// ===== MÓDULO: PASSAGENS DE SERVIÇO ======================================================
 
 const PassagensModule = (() => {
-  let psAtualId = null;
-  // ===== CALCULAR PERÍODO DA PS =====
+ let psAtualId = null;
+
+  // ===== CALCULAR PERÍODO DA PS ==========================================================
   function calcularPeriodoPS(dataPrimeiraEntrada) {
     const primeiraEntrada = new Date(dataPrimeiraEntrada);
     const hoje = new Date();
@@ -59,7 +60,7 @@ const PassagensModule = (() => {
     };
   }
 
-  // ===== CRIAR NOVA PS =====
+  // ===== CRIAR NOVA PS ===================================================================
   async function criarNovaPS(barcoId, barcoData) {
     const usuario = AuthModule.getUsuarioLogado();
     if (!usuario) {
@@ -141,8 +142,7 @@ const PassagensModule = (() => {
 
 
 
-  // ===== PREENCHER FORMULÁRIO DA PS =====
-// ===== PREENCHER FORMULÁRIO DA PS =====
+// ===== PREENCHER FORMULÁRIO DA PS =======================================================
 function preencherFormularioPS(psData, barcoData, usuario) {
   // Mostrar formulário, ocultar placeholder
   document.getElementById('psPlaceholder').style.display = 'none';
@@ -175,6 +175,11 @@ function preencherFormularioPS(psData, barcoData, usuario) {
   if (!window.btnExcluirConfigurado) {
     configurarBotaoExcluir();
     window.btnExcluirConfigurado = true;
+}
+  // Configurar botão salvar (apenas uma vez)
+  if (!window.btnSalvarConfigurado) {
+    configurarBotaoSalvar();
+    window.btnSalvarConfigurado = true;
 }
 }
 
@@ -237,7 +242,7 @@ async function carregarFiscaisEmbarcando(fiscalEmbSelecionado = '') {
     return `${dia}/${mes}/${ano}`;
   }
 
-  // ===== ABRIR PS EXISTENTE =====
+  // ===== ABRIR PS EXISTENTE ============================================================
 async function abrirPS(psId) {
   try {
     const response = await fetch(`/api/passagens/${psId}/`);
@@ -261,7 +266,7 @@ async function abrirPS(psId) {
 }
 
 
-// ===== EXCLUIR RASCUNHO ===================================================
+// ===== EXCLUIR RASCUNHO =================================================================
 async function excluirRascunho(psId) {
   if (!confirm('Confirma a exclusão do rascunho?')) {
     return;
@@ -294,7 +299,7 @@ async function excluirRascunho(psId) {
   }
 }
 
-// ===== CONFIGURAR BOTÃO EXCLUIR ===================================
+// ===== CONFIGURAR BOTÃO EXCLUIR =========================================================
 function configurarBotaoExcluir() {
   const btnExcluir = document.getElementById('btnExcluirRasc');
   
@@ -307,7 +312,49 @@ function configurarBotaoExcluir() {
   });
 }
 
-// ===== CARREGAR PASSAGENS DO USUÁRIO =====
+// ===== SALVAR RASCUNHO ==================================================================
+async function salvarRascunho(psId) {
+  try {
+    const dados = {
+      dataEmissaoPS: document.getElementById('fData').value,
+      dataInicio: document.getElementById('fInicioPS').value,
+      dataFim: document.getElementById('fFimPS').value,
+      fiscalEmb: document.getElementById('fEmbC').value
+    };
+
+    const response = await fetch(`/api/passagens/${psId}/`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(dados)
+    });
+
+    const result = await response.json();
+
+    if (!result.success) {
+      throw new Error(result.error);
+    }
+
+    alert('Rascunho salvo com sucesso!');
+
+  } catch (error) {
+    alert('Erro ao salvar rascunho: ' + error.message);
+  }
+}
+
+// ===== CONFIGURAR BOTÃO SALVAR ==========================================================
+function configurarBotaoSalvar() {
+  const btnSalvar = document.getElementById('btnSalvar');
+  
+  btnSalvar.addEventListener('click', function() {
+    if (psAtualId) {
+      salvarRascunho(psAtualId);
+    } else {
+      alert('Nenhuma PS carregada');
+    }
+  });
+}
+
+// ===== CARREGAR PASSAGENS DO USUÁRIO ====================================================
 async function carregarPassagensUsuario() {
   const usuario = AuthModule.getUsuarioLogado();
   if (!usuario) return;
@@ -333,7 +380,7 @@ async function carregarPassagensUsuario() {
   }
 }
 
-  // ===== EXPORTAR FUNÇÕES =====
+  // ===== EXPORTAR FUNÇÕES ================================================================
   return {
     criarNovaPS,
     carregarPassagensUsuario

@@ -527,8 +527,6 @@ def modais_list(request):
             'error': str(e)
         }, status=500)
 
-
-
 #================================================PASSAGEM DE SERVIÇO - API REST - VERIFICA RASCUNHO USUARIO=================================================
 @csrf_exempt
 @require_http_methods(["POST"])
@@ -617,6 +615,71 @@ def verificar_rascunho_embarcacao(request):
             'error': str(e)
         }, status=500)
 
+#================================================PASSAGEM DE SERVIÇO - API REST - DETALHES PS=================================================
+@csrf_exempt
+@require_http_methods(["GET", "PUT", "DELETE"])
+def passagem_detail(request, ps_id):
+    """
+    GET: Retorna detalhes de uma PS específica
+    PUT: Atualiza uma PS
+    DELETE: Remove uma PS
+    """
+    try:
+        ps = PassServ.objects.get(id=ps_id)
+        
+        if request.method == 'GET':
+            return JsonResponse({
+                'success': True,
+                'data': {
+                    'id': ps.id,
+                    'numPS': ps.numPS,
+                    'anoPS': ps.anoPS,
+                    'dataInicio': str(ps.dataInicio),
+                    'dataFim': str(ps.dataFim),
+                    'dataEmissaoPS': str(ps.dataEmissaoPS),
+                    'TipoBarco': ps.TipoBarco,
+                    'BarcoPS': ps.BarcoPS,
+                    'statusPS': ps.statusPS,
+                    'fiscalEmb': ps.fiscalEmb,
+                    'fiscalDes': ps.fiscalDes
+                }
+            })
+        
+        elif request.method == 'PUT':
+            data = json.loads(request.body)
+            
+            ps.dataEmissaoPS = data.get('dataEmissaoPS', ps.dataEmissaoPS)
+            ps.dataInicio = data.get('dataInicio', ps.dataInicio)
+            ps.dataFim = data.get('dataFim', ps.dataFim)
+            
+            if data.get('fiscalEmb'):
+                fiscal_emb = FiscaisCad.objects.get(id=data.get('fiscalEmb'))
+                ps.fiscalEmb = f"{fiscal_emb.chave} - {fiscal_emb.nome}"
+            
+            ps.save()
+            
+            return JsonResponse({
+                'success': True,
+                'message': 'PS atualizada com sucesso'
+            })
+        
+        elif request.method == 'DELETE':
+            ps.delete()
+            return JsonResponse({
+                'success': True,
+                'message': 'PS excluída com sucesso'
+            })
+        
+    except PassServ.DoesNotExist:
+        return JsonResponse({
+            'success': False,
+            'error': 'PS não encontrada'
+        }, status=404)
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=500)
 
 #================================================PASSAGEM DE SERVIÇO - API REST - CRIA NOVA PS=================================================
 @csrf_exempt
@@ -684,9 +747,7 @@ def criar_nova_ps(request):
         }, status=400)
 
 #================================================PASSAGEM DE SERVIÇO - API REST - DETALHES PS=================================================
-@csrf_exempt
-@require_http_methods(["GET", "DELETE"])
-def passagem_detail(request, ps_id):
+
     """
     GET: Retorna detalhes de uma PS específica
     DELETE: Remove uma PS
