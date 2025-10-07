@@ -181,6 +181,12 @@ function preencherFormularioPS(psData, barcoData, usuario) {
     configurarBotaoSalvar();
     window.btnSalvarConfigurado = true;
 }
+// Carregar modulo Inspeção Normativa
+if (typeof InspNormModule !== 'undefined' && InspNormModule.carregarDados) {
+  InspNormModule.carregarDados(psData.id);
+}
+
+
 }
 
 // ===== CARREGAR FISCAIS COM PERFIL FISCAL =====
@@ -257,6 +263,11 @@ async function abrirPS(psId) {
     // Preencher formulário com dados da PS
     preencherFormularioPS(result.data, null, null);
 
+    // Carregar dados Modulo Inspeção Normativa
+    if (typeof InspNormModule !== 'undefined' && InspNormModule.carregarDados) {
+      InspNormModule.carregarDados(psId);
+    }
+
     // Ir para tela da PS
     document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
     document.getElementById('tab-passagem').classList.add('active');
@@ -322,6 +333,11 @@ async function salvarRascunho(psId, silencioso = false) {
       dataFim: document.getElementById('fFimPS').value,
       fiscalEmb: document.getElementById('fEmbC').value
     };
+
+    // Salvar dados Inspeção Normativa
+    if (typeof InspNormModule !== 'undefined' && InspNormModule.salvar) {
+      await InspNormModule.salvar();
+    }
 
     const response = await fetch(`/api/passagens/${psId}/`, {
       method: 'PUT',

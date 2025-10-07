@@ -212,17 +212,32 @@
         <input id="anNaoPrevisto" type="checkbox"> Não previsto para esse porto
       </label>
       
-      
-      
-      <div style="display:flex; gap:12px; align-items:flex-start;">
-        <div style="flex:0 0 auto;">
-          <label>Descrição</label><select id="inspNorDesc" style="width:200px;"><option value="">— selecione —</option></select>
+      <div id="containerSubtabelaInspNorm" style="display:block;">
+        <div style="display:flex; gap:12px; align-items:flex-start; margin-bottom:12px;">
+          <div style="flex:0 0 auto;">
+            <label>Descrição</label><select id="inspNorDesc" style="width:200px;"><option value="">— selecione —</option></select>
+          </div>
+          <div style="flex:0 0 auto;">
+            <label>OS</label><input id="inspNorOS" type="text" maxlength="50" style="width:160px;">
+          </div>
+          <div style="flex:0 0 auto; margin-top:20px;">
+            <button id="btnAddInspNorm" class="btn small">Adicionar</button>
+          </div>
         </div>
-        <div style="flex:0 0 auto;">
-          <label>OS</label><input id="inspNorOS" type="text" maxlength="50" style="width:160px;">
-        </div>
-       </div>
-                  
+        
+        <table id="tblInspNorm" style="width:100%; border-collapse:collapse; margin-bottom:12px;">
+          <thead>
+            <tr style="background:#f0f0f0;">
+              <th style="border:1px solid #ddd; padding:8px; text-align:left;">Descrição</th>
+              <th style="border:1px solid #ddd; padding:8px; text-align:left;">OS</th>
+              <th style="border:1px solid #ddd; padding:8px; text-align:center; width:100px;">Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+          </tbody>
+        </table>
+      </div>
+      
       <label>Observações</label>
       <textarea id="anObs" maxlength="4000" rows="8" style="width:100%;resize:vertical;overflow:auto;"></textarea>
     </div>
@@ -570,7 +585,8 @@
  <script src="/static/js/auth.js"></script>
  <script src="/static/js/fiscais.js"></script>
  <script src="/static/js/embarcacoes.js"></script>
- <script src="/static/js/passagens.js"></script> 
+ <script src="/static/js/passagens.js"></script>
+ <script src="/static/js/insp-norm.js"></script> 
  <script src="/static/js/app.js"></script>
 </body>
 </html>
