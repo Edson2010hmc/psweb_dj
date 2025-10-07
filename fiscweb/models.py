@@ -241,7 +241,7 @@ class PortoInspNorm(models.Model):
         ordering = ['idxPortoIN__BarcoPS','-idxPortoIN__numPS']  
 
     def __str__(self):
-        return f"{self.idxPortoIN} - {self.DescInspNorm}"
+        return f"{self.idxPortoIN}"
     
 #=================================SUB TABELA INSPEÇÕES NORMATIVAS ===============================================
 class subTabPortoInspNorm(models.Model):
@@ -261,7 +261,7 @@ class subTabPortoInspNorm(models.Model):
     class Meta:
         verbose_name = 'Lista Inspeção Normativa - Porto'
         verbose_name_plural = 'Lista Inspeções Petrobras - Portos'
-        ordering = ['idxsubTabPortoInspNorm__idxPortoIP__BarcoPS','-idxsubTabPortoInspNorm__idxPortoIP__numPS']  
+        ordering = ['idxsubTabPortoInspNorm__idxPortoIN__BarcoPS','-idxsubTabPortoInspNorm__idxPortoIP__numPS']  
 
     def __str__(self):
         return f"{self.idxsubTabPortoInspNorm} - {self.DescInspNorm}"
@@ -281,7 +281,7 @@ class PortoInspPetr(models.Model):
         ordering = ['idxPortoIP__BarcoPS','-idxPortoIP__numPS']  
 
     def __str__(self):
-        return f"{self.idxPortoIP} - {self.DescInspPetr}"
+        return f"{self.idxPortoIP}"
     
 #=================================SUB TABELA INSPEÇÕES PETROBRAS ===============================================
 class subTabPortoInspPetr(models.Model):
@@ -341,8 +341,7 @@ class PortoEmbEquip(models.Model):
     def __str__(self):
         return f"{self.idxPortoEE} - {self.DescEmbEquip}"
     
-#====SUB TABELA EMBARQUE EQUIPES==============================================
-
+#=========================================SUB TABELA EMBARQUE EQUIPES==============================
 class subTabPortoEmbEquip(models.Model):
     """Modelo para cadastro de Passagem de Serviço - Embarque Equipes - porto"""
 
@@ -372,8 +371,7 @@ class subTabPortoEmbEquip(models.Model):
         return f"{self.idxSubTabPortoEE} - {self.DescEmbEquip}"
 
 
-
-#==========================================================1.7 MODELO EMBARQUE MATERIAIS===============================================
+#========================================1.7 MODELO EMBARQUE MATERIAIS===============================================
 class PortoEmbMat(models.Model):
     """Modelo para cadastro de Passagem de Serviço - Embarque de Materiais - porto"""
 
@@ -389,10 +387,9 @@ class PortoEmbMat(models.Model):
         ordering = ['idxPortoEM__BarcoPS','-idxPortoEM__numPS']  
 
     def __str__(self):
-        return f"{self.idxPortoEM} - {self.RtEmbMat}"
+        return f"{self.idxPortoEM} - {self.idxPortoEM.numPS}"
     
 #==========================================SUB TABELA EMBARQUE MATERIAIS==============================================
-
 class subTabPortoEmbMat(models.Model):
     """Modelo para cadastro de Passagem de Serviço - Embarque de Materiais - porto"""
 
@@ -426,7 +423,7 @@ class subTabPortoEmbMat(models.Model):
 
 
 
-#==========================================================1.8 MODELO DESEMBARQUE MATERIAIS===============================================
+#========================================1.8 MODELO DESEMBARQUE MATERIAIS===============================================
 class PortoDesMat(models.Model):
     """Modelo para cadastro de Passagem de Serviço - Desembarque de Materiais - porto"""
 
@@ -450,7 +447,7 @@ class PortoDesMat(models.Model):
         return f"{self.idxPortoDM} - {self.RtDesMat}"
     
 
-#==========================================================1.9 MODELO MOBILIZAÇÃO DESMOBILIZAÇÃO===============================================
+#========================================1.9 MODELO MOBILIZAÇÃO DESMOBILIZAÇÃO===============================================
 class PortoMobD(models.Model):
     """Modelo para cadastro de Passagem de Serviço - Operações de Mobilização e desmobilização - Porto"""
 
@@ -626,42 +623,55 @@ class smsLvSeg(models.Model):
     LvSegCamoAsogUlt = models.DateField(verbose_name='Data da Última LV CAMO/ASOG')
     LvSegCamoAsogProx = models.DateField(verbose_name='Data da Próxima LV CAMO/ASOG')
     LvlSegCamoAsogFarol = models.CharField(max_length=3,verbose_name='Farol LV CAMO/ASOG')
+    
     LvSegCondNavioCpUlt = models.DateField(verbose_name='Data da Última LV Condição Navio(Curto Prazo)')  
     LvSegCondNavioCpProx = models.DateField(verbose_name='Data da Próxima LV Condição Navio(Curto Prazo)') 
-    LvSegCondNavioCpFarol = models.DateField(verbose_name='Farol LV Condição Navio(Curto Prazo)')
+    LvSegCondNavioCpFarol = models.CharField(verbose_name='Farol LV Condição Navio(Curto Prazo)')
+    
     LvlSegCondNavioLpUlt = models.DateField(verbose_name='Data da Última LV Condição Navio(Longo Prazo)')  
     LvSegCondNavioLpProx = models.DateField(verbose_name='Data da Próxima LV Condição Navio(Longo Prazo)') 
-    LvSegCondNavioLpFarol = models.DateField(verbose_name='Farol LV Condição Navio(Longo Prazo)') 
+    LvSegCondNavioLpFarol = models.CharField(verbose_name='Farol LV Condição Navio(Longo Prazo)') 
+    
     LvSegEspConfUlt = models.DateField(verbose_name='Data da Última LV Espaço Confinado')
     LvSegEspConfProx = models.DateField(verbose_name='Data da Próxima LV Espaço Confinado')
     LvSegEspConfFarol = models.CharField(max_length=3,verbose_name='Farol LV Espaço Confinado')
+    
     LvSegMovCargasUlt = models.DateField(verbose_name='Data da Última LV Movimentação de Cargas')
     LvSegMovCargasProx = models.DateField(verbose_name='Data da Próxima LV Movimentação de Cargas')
     LvSegMovCargasFarol = models.CharField(max_length=3,verbose_name='Farol LV Movimentação de Cargas') 
+    
     LvSegPintQuimPerUlt = models.DateField(verbose_name='Data da Última LV Pintura e Produtos Químicos Perigosos')
     LvSegPintQuimPerProx = models.DateField(verbose_name='Data da Próxima LV Pintura e Produtos Químicos Perigosos')
     LvSegPintQuimPerFarol = models.CharField(max_length=3,verbose_name='Farol LV Pintura e Produtos Químicos Perigosos')
+    
     LvSegProcVcpUlt = models.DateField(verbose_name='Data da Última LV de Processo de VCP')
     LvSegProcVcpProx = models.DateField(verbose_name='Data da Próxima LV de Processo de VCP')
     LvSegProcVcpFarol = models.CharField(max_length=3,verbose_name='Farol LV de Processo de VCP')
+    
     LvlSegRespEmergUlt = models.DateField(verbose_name='Data da Última LV de Resposta a Emergência')
     LvSegRespEmergProx = models.DateField(verbose_name='Data da Próxima LV de Resposta a Emergência')
     LvSegRespEmergFarol = models.CharField(max_length=3,verbose_name='Farol LV de Resposta a Emergência')
+    
     LvlSegRiscSanitUlt = models.DateField(verbose_name='Data da Última LV de Risco Sanitário')
     LvSegRiscSanitProx = models.DateField(verbose_name='Data da Próxima LV de Risco Sanitário')
     LvSegRiscSanitFarol = models.CharField(max_length=3,verbose_name='Farol LV de Risco Sanitário')
+    
     LvSegTestHidrostUlt = models.DateField(verbose_name='Data da Última LV de Teste Hidrostático')
     LvSegTestHidrostProx = models.DateField(verbose_name='Data da Próxima LV de Teste Hidrostático')
     LvSegTestHidrostFarol = models.CharField(max_length=3,verbose_name='Farol LV de Teste Hidrostático')
+    
     LvlSegTrabQuentUlt = models.DateField(verbose_name='Data da Última LV de Trabalho a Quente')
     LvSegTrabQuentProx = models.DateField(verbose_name='Data da Próxima LV de Trabalho a Quente')
     LvSegTrabQuentFarol = models.CharField(max_length=3,verbose_name='Farol LV de Trabalho a Quente')
+    
     LvlSegTrabAltUlt = models.DateField(verbose_name='Data da Última LV de Trabalho em Altura')
     LvSegTrabAltProx = models.DateField(verbose_name='Data da Próxima LV de Trabalho em Altura')
     LvSegTrabAltFarol = models.CharField(max_length=3,verbose_name='Farol LV de Trabalho em Altura')
+    
     LvlSegTrabEletrUlt = models.DateField(verbose_name='Data da Última LV de Trabalho em eletricidade')
     LvSegTrabEletrProx = models.DateField(verbose_name='Data da Próxima LV de Trabalho em eletricidade')
     LvSegTrabEletrFarol = models.CharField(max_length=3,verbose_name='Farol LV de Trabalho em eletricidade')
+    
     obsLvSeg = models.TextField(max_length=500, verbose_name='Observações', blank=True)
 
     class Meta:
