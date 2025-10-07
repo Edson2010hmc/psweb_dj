@@ -47,7 +47,7 @@ class ModalBarco(models.Model):
         verbose_name_plural = "Modais"
 
 
-#================================================MODELO FISCAIS CADASTRO================================================#
+#==================================MODELO FISCAIS CADASTRO================================================#
 class FiscaisCad(models.Model):
     """Modelo para cadastro de fiscaiss"""
       
@@ -75,7 +75,7 @@ class FiscaisCad(models.Model):
         return self.nome
     
 
-#================================================MODELO BARCOS CADASTRO================================================#
+#==================================MODELO BARCOS CADASTRO================================================#
 class BarcosCad(models.Model):
     """Modelo para cadastro de embarcações"""
     
@@ -118,7 +118,7 @@ class BarcosCad(models.Model):
     
 
 
-#================================================ 1 MODELO PASSAGENS DE SERVIÇO================================================#
+#=================================1 MODELO PASSAGENS DE SERVIÇO================================================#
 class PassServ(models.Model):
     """Modelo para cadastro de Passagem de Serviço"""
 
@@ -151,7 +151,7 @@ class PassServ(models.Model):
         return f"{self.numPS} - {self.BarcoPS} - {self.dataEmissaoPS}"
         
 
-#===========================================================1.1 =MODELO PORTO TROCA DE TURMA===============================================
+#=================================1.1 =MODELO PORTO TROCA DE TURMA===============================================
 class PortoTrocaTurma(models.Model):
     """Modelo para cadastro de Passagem de Serviço - Porto"""
 
@@ -173,7 +173,7 @@ class PortoTrocaTurma(models.Model):
     
 
 
-#==========================================================1.2 MODELO PORTO MANUTENÇÃO PREVENTIVA===============================================
+#================================1.2 MODELO PORTO MANUTENÇÃO PREVENTIVA===============================================
 class PortoManutPrev(models.Model):
     """Modelo para cadastro de Passagem de Serviço - Manutenção Preventiva - porto"""
 
@@ -198,7 +198,7 @@ class PortoManutPrev(models.Model):
         return f"{self.idxPortoMP} - {self.OrdSerManutPrev}"
     
 
-#==========================================================1.3 MODELO PORTO ABASTECIMENTO===============================================
+#=================================1.3 MODELO PORTO ABASTECIMENTO===============================================
 class PortoAbast(models.Model):
     """Modelo para cadastro de Passagem de Serviço - Abastecimento - porto"""
 
@@ -226,7 +226,7 @@ class PortoAbast(models.Model):
         return f"{self.idxPortoAB} - {self.OrdSerAbast}"
     
 
-#==========================================================1.4 MODELO INSPEÇÕES NORMATIVAS===============================================
+#=================================1.4 MODELO INSPEÇÕES NORMATIVAS===============================================
 class PortoInspNorm(models.Model):
     """Modelo para cadastro de Passagem de Serviço - Inspeções Normativas - porto"""
 
@@ -255,19 +255,19 @@ class subTabPortoInspNorm(models.Model):
                                                   ]
 
     idxsubTabPortoInspNorm = models.ForeignKey(PortoInspNorm, on_delete=models.CASCADE)
-    DescInspNorm = models.CharField(max_length=9,choices=inspNormDescChoices,verbose_name='Inspeções Normativas')
+    DescInspNorm = models.CharField(max_length=10,choices=inspNormDescChoices,verbose_name='Inspeções Normativas')
     OrdSerInspNorm = models.CharField(max_length=12, verbose_name='Ordem de Serviço')
     
     class Meta:
         verbose_name = 'Lista Inspeção Normativa - Porto'
         verbose_name_plural = 'Lista Inspeções Petrobras - Portos'
-        ordering = ['idxsubTabPortoInspNorm__idxPortoIN__BarcoPS','-idxsubTabPortoInspNorm__idxPortoIP__numPS']  
+        ordering = ['idxsubTabPortoInspNorm__idxPortoIN__BarcoPS','-idxsubTabPortoInspNorm__idxPortoIN__numPS']  
 
     def __str__(self):
         return f"{self.idxsubTabPortoInspNorm} - {self.DescInspNorm}"
 
     
-#==========================================================1.5 MODELO INSPEÇÕES PETROBRAS===============================================
+#==================================1.5 MODELO INSPEÇÕES PETROBRAS===============================================
 class PortoInspPetr(models.Model):
     """Modelo para cadastro de Passagem de Serviço - Inspeções Petrobras - porto"""
 
@@ -281,7 +281,7 @@ class PortoInspPetr(models.Model):
         ordering = ['idxPortoIP__BarcoPS','-idxPortoIP__numPS']  
 
     def __str__(self):
-        return f"{self.idxPortoIP}"
+        return f"{self.idxPortoIP} - {self.idxPortoIP.numPS}"
     
 #=================================SUB TABELA INSPEÇÕES PETROBRAS ===============================================
 class subTabPortoInspPetr(models.Model):
@@ -297,7 +297,7 @@ class subTabPortoInspPetr(models.Model):
                           ]
 
     idxsubTabPortoIP = models.ForeignKey(PortoInspPetr, on_delete=models.CASCADE)
-    DescInspPetr = models.CharField(max_length=9,choices=inspPetrDescChoices,verbose_name='Descrição da visita')
+    DescInspPetr = models.CharField(max_length=20,choices=inspPetrDescChoices,verbose_name='Descrição da visita')
     auditorPetr = models.CharField(max_length=30, verbose_name='Auditor/Visitante')
     gerAuditorPetr = models.CharField(max_length=30, verbose_name='Gerencia')
         
@@ -314,23 +314,9 @@ class subTabPortoInspPetr(models.Model):
 class PortoEmbEquip(models.Model):
     """Modelo para cadastro de Passagem de Serviço - Embarque Equipes - porto"""
 
-    EmbEquipDescChoices = [
-                            ('crd'     ,'CRD'),
-                            ('stc'     ,'STC'),
-                            ('eqse'    ,'EQSE'),
-                            ('sto'     ,'STO'),
-                            ('cenpes'  ,'CENPES'),
-                            ('ambient' ,'AMBIENTAÇÃO'),
-                            ('outros'   ,'OUTROS'),
-                          ]
-
+   
     idxPortoEE = models.ForeignKey(PassServ, on_delete=models.CASCADE)
-
     prevEmbEquip = models.BooleanField(default=False, verbose_name='Embarque de Equipe?')
-
-    DescEmbEquip = models.CharField(max_length=9,choices=EmbEquipDescChoices,verbose_name='Descrição')
-    equipNome = models.CharField(max_length=30, verbose_name='Nome')
-    equipEmpre = models.CharField(max_length=30, verbose_name='Empresa')
     ObservEmbEquip = models.TextField(max_length=200, verbose_name='Observações', blank=True)
     
     class Meta:
@@ -339,25 +325,25 @@ class PortoEmbEquip(models.Model):
         ordering = ['idxPortoEE__BarcoPS','-idxPortoEE__numPS']  
 
     def __str__(self):
-        return f"{self.idxPortoEE} - {self.DescEmbEquip}"
+        return f"{self.idxPortoEE} - {self.idxPortoEE.numPS}"
     
 #=========================================SUB TABELA EMBARQUE EQUIPES==============================
 class subTabPortoEmbEquip(models.Model):
     """Modelo para cadastro de Passagem de Serviço - Embarque Equipes - porto"""
 
     EmbEquipDescChoices = [
-                            ('crd'     ,'CRD'),
-                            ('stc'     ,'STC'),
-                            ('eqse'    ,'EQSE'),
-                            ('sto'     ,'STO'),
-                            ('cenpes'  ,'CENPES'),
-                            ('ambient' ,'AMBIENTAÇÃO'),
-                            ('outros'   ,'OUTROS'),
+                            ('CRD'               ,'CRD'),
+                            ('STC'               ,'STC'),
+                            ('EQSE'              ,'EQSE'),
+                            ('STO'               ,'STO'),
+                            ('CENPES'            ,'CENPES'),
+                            ('AMBIENTAÇÃO MIS'   ,'AMBIENTAÇÃO MIS'),
+                            ('OUTROS'            ,'OUTROS'),
                           ]
 
     idxSubTabPortoEE = models.ForeignKey(PortoEmbEquip, on_delete=models.CASCADE)
 
-    DescEmbEquip = models.CharField(max_length=9,choices=EmbEquipDescChoices,verbose_name='Descrição')
+    DescEmbEquip = models.CharField(max_length=18,choices=EmbEquipDescChoices,verbose_name='Descrição')
     equipNome = models.CharField(max_length=30, verbose_name='Nome')
     equipFuncao = models.CharField(max_length=30, verbose_name='Função')
     equipEmpre = models.CharField(max_length=30, verbose_name='Empresa')
@@ -626,11 +612,11 @@ class smsLvSeg(models.Model):
     
     LvSegCondNavioCpUlt = models.DateField(verbose_name='Data da Última LV Condição Navio(Curto Prazo)')  
     LvSegCondNavioCpProx = models.DateField(verbose_name='Data da Próxima LV Condição Navio(Curto Prazo)') 
-    LvSegCondNavioCpFarol = models.CharField(verbose_name='Farol LV Condição Navio(Curto Prazo)')
+    LvSegCondNavioCpFarol = models.CharField(max_length=3,verbose_name='Farol LV Condição Navio(Curto Prazo)')
     
     LvlSegCondNavioLpUlt = models.DateField(verbose_name='Data da Última LV Condição Navio(Longo Prazo)')  
     LvSegCondNavioLpProx = models.DateField(verbose_name='Data da Próxima LV Condição Navio(Longo Prazo)') 
-    LvSegCondNavioLpFarol = models.CharField(verbose_name='Farol LV Condição Navio(Longo Prazo)') 
+    LvSegCondNavioLpFarol = models.CharField(max_length=3,verbose_name='Farol LV Condição Navio(Longo Prazo)') 
     
     LvSegEspConfUlt = models.DateField(verbose_name='Data da Última LV Espaço Confinado')
     LvSegEspConfProx = models.DateField(verbose_name='Data da Próxima LV Espaço Confinado')

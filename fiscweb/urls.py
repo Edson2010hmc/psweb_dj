@@ -28,5 +28,13 @@ urlpatterns = [
     path('api/passagens/criar/', views.criar_nova_ps, name='criar_nova_ps'),
     path('api/passagens/<int:ps_id>/', views.passagem_detail, name='passagem_detail'),
     path('api/passagens/usuario/', views.listar_passagens_usuario, name='listar_passagens_usuario'),
+
+
+    # API Inspeção Normativa (Principal)
+    path('api/ps/<int:ps_id>/insp-norm/', views.porto_insp_norm_list, name='porto_insp_norm_list'),
+    path('api/insp-norm/<int:insp_norm_id>/', views.porto_insp_norm_detail, name='porto_insp_norm_detail'),
     
+    # API Subtabela Inspeção Normativa
+    path('api/insp-norm/<int:insp_norm_id>/subtab/', views.subtab_insp_norm_list, name='subtab_insp_norm_list'),
+    path('api/insp-norm-item/<int:item_id>/', views.subtab_insp_norm_detail, name='subtab_insp_norm_detail'),
 ]

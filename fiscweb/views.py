@@ -4,6 +4,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 import json
 from .models import FiscaisCad,BarcosCad,ModalBarco,PassServ
+from .models import PortoInspNorm,subTabPortoInspNorm
 
 #===============================================RENDERIZA TELA PRINCIPAL=================================================
 def index(request):
@@ -868,10 +869,141 @@ def listar_passagens_usuario(request):
             'error': str(e)
         }, status=500)
 
+#================================================INSPEÇÃO NORMATIVA - SUBTABELA - API REST=================================================
+@csrf_exempt
+@require_http_methods(["GET", "POST"])
+def subtab_insp_norm_list(request, insp_norm_id):
+    """
+    GET: Lista itens da subtabela de uma inspeção normativa
+    POST: Adiciona novo item à subtabela
+    """
+    
+    # Verificar se inspeção normativa existe
+    try:
+        insp_norm = PortoInspNorm.objects.get(id=insp_norm_id)
+    except PortoInspNorm.DoesNotExist:
+        print(f"[API ERROR] Inspeção Normativa ID {insp_norm_id} não encontrada")
+        return JsonResponse({
+            'success': False,
+            'error': 'Inspeção Normativa não encontrada'
+        }, status=404)
+    
+    if request.method == 'GET':
+        try:
+            itens = subTabPortoInspNorm.objects.filter(
+                idxsubTabPortoInspNorm=insp_norm
+            ).values('id', 'DescInspNorm', 'OrdSerInspNorm')
+            
+            itens_list = list(itens)
+            
+            print(f"[API] GET /subtab-insp-norm/{insp_norm_id}/ - Retornando {len(itens_list)} itens")
+            
+            return JsonResponse({
+                'success': True,
+                'data': itens_list
+            })
+            
+        except Exception as e:
+            print(f"[API ERROR] GET /subtab-insp-norm/{insp_norm_id}/ - {str(e)}")
+            return JsonResponse({
+                'success': False,
+                'error': str(e)
+            }, status=500)
+    
+    elif request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            
+            print(f"[API] POST /subtab-insp-norm/{insp_norm_id}/ - Criando item")
+            
+            item = subTabPortoInspNorm.objects.create(
+                idxsubTabPortoInspNorm=insp_norm,
+                DescInspNorm=data.get('DescInspNorm'),
+                OrdSerInspNorm=data.get('OrdSerInspNorm')
+            )
+            
+            print(f"[API] POST /subtab-insp-norm/{insp_norm_id}/ - Item criado com ID: {item.id}")
+            
+            return JsonResponse({
+                'success': True,
+                'message': 'Item adicionado com sucesso',
+                'data': {
+                    'id': item.id,
+                    'DescInspNorm': item.DescInspNorm,
+                    'OrdSerInspNorm': item.OrdSerInspNorm
+                }
+            }, status=201)
+            
+        except Exception as e:
+            print(f"[API ERROR] POST /subtab-insp-norm/{insp_norm_id}/ - {str(e)}")
+            return JsonResponse({
+                'success': False,
+                'error': str(e)
+            }, status=400)
 
-
-
-
+@csrf_exempt
+@require_http_methods(["PUT", "DELETE"])
+def subtab_insp_norm_detail(request, item_id):
+    """
+    PUT: Atualiza um item da subtabela
+    DELETE: Remove um item da subtabela
+    """
+    
+    try:
+        item = subTabPortoInspNorm.objects.get(id=item_id)
+    except subTabPortoInspNorm.DoesNotExist:
+        print(f"[API ERROR] Item ID {item_id} não encontrado")
+        return JsonResponse({
+            'success': False,
+            'error': 'Item não encontrado'
+        }, status=404)
+    
+    if request.method == 'PUT':
+        try:
+            data = json.loads(request.body)
+            
+            print(f"[API] PUT /subtab-insp-norm-item/{item_id}/ - Atualizando item")
+            
+            item.DescInspNorm = data.get('DescInspNorm', item.DescInspNorm)
+            item.OrdSerInspNorm = data.get('OrdSerInspNorm', item.OrdSerInspNorm)
+            item.save()
+            
+            print(f"[API] PUT /subtab-insp-norm-item/{item_id}/ - Item atualizado")
+            
+            return JsonResponse({
+                'success': True,
+                'message': 'Item atualizado com sucesso',
+                'data': {
+                    'id': item.id,
+                    'DescInspNorm': item.DescInspNorm,
+                    'OrdSerInspNorm': item.OrdSerInspNorm
+                }
+            })
+            
+        except Exception as e:
+            print(f"[API ERROR] PUT /subtab-insp-norm-item/{item_id}/ - {str(e)}")
+            return JsonResponse({
+                'success': False,
+                'error': str(e)
+            }, status=400)
+    
+    elif request.method == 'DELETE':
+        try:
+            item.delete()
+            
+            print(f"[API] DELETE /subtab-insp-norm-item/{item_id}/ - Item removido")
+            
+            return JsonResponse({
+                'success': True,
+                'message': 'Item removido com sucesso'
+            })
+            
+        except Exception as e:
+            print(f"[API ERROR] DELETE /subtab-insp-norm-item/{item_id}/ - {str(e)}")
+            return JsonResponse({
+                'success': False,
+                'error': str(e)
+            }, status=400)
 
 
 
