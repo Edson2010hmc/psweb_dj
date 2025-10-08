@@ -315,7 +315,7 @@
 </div>
 
 <!-- 1.6 Embarque de Equipes -->
-<div class="accordion-item">
+  <div class="accordion-item">
   <div class="accordion-header" data-target="embequipes">
     <span>1.6 Embarque de Equipes</span>
     <span class="toggle">▼</span>
@@ -325,16 +325,53 @@
       <label style="display:inline-flex;align-items:center;gap:6px;white-space:nowrap;margin-bottom:8px;">
         <input id="eqNaoPrevisto" type="checkbox"> Não previsto para esse porto
       </label>
-    </div>
-    <table id="tblEq">
-      <thead><tr><th>Descrição</th><th>Empresa</th><th>Nome</th><th>Observações</th><th></th></tr></thead>
-      <tbody></tbody>
-    </table>
-    <div class="row">
-      <div class="col"><button id="btnAddEq" class="btn secondary">Adicionar linha</button></div>
+      
+      <div id="containerSubtabelaEmbEquip" style="display:block;">
+        <div style="display:flex; gap:12px; align-items:flex-start; margin-bottom:12px;">
+          <div style="flex:0 0 auto;">
+            <label>Descrição</label>
+            <select id="embEquipDesc" style="width:200px;">
+              <option value="">— selecione —</option>
+            </select>
+          </div>
+          <div style="flex:0 0 auto;">
+            <label>Nome</label>
+            <input id="eqNome" type="text" maxlength="30" style="width:250px;">
+          </div>
+          <div style="flex:0 0 auto;">
+            <label>Função</label>
+            <input id="eqFuncao" type="text" maxlength="30" style="width:250px;">
+          </div>
+          <div style="flex:0 0 auto;">
+            <label>Empresa</label>
+            <input id="eqEmpresa" type="text" maxlength="30" style="width:250px;">
+          </div>
+          <div style="flex:0 0 auto; margin-top:20px;">
+            <button id="btnAddEmbEquip" class="btn small">Adicionar</button>
+          </div>
+        </div>
+        
+        <table id="tblEmbEquip" style="width:100%; border-collapse:collapse; margin-bottom:12px;">
+          <thead>
+            <tr style="background:#f0f0f0;">
+              <th style="border:1px solid #ddd; padding:8px; text-align:left;">Descrição</th>
+              <th style="border:1px solid #ddd; padding:8px; text-align:left;">Nome</th>
+              <th style="border:1px solid #ddd; padding:8px; text-align:left;">Função</th>
+              <th style="border:1px solid #ddd; padding:8px; text-align:left;">Empresa</th>
+              <th style="border:1px solid #ddd; padding:8px; text-align:center; width:100px;">Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+          </tbody>
+        </table>
+      </div>
+      
+      <label>Observações</label>
+      <textarea id="eqObs" maxlength="4000" rows="8" style="width:100%;resize:vertical;overflow:auto;"></textarea>
     </div>
   </div>
 </div>
+
 
 <!-- 1.7 Embarque de Materiais -->
 <div class="accordion-item">
@@ -613,7 +650,8 @@
  <script src="/static/js/manut-prev.js"></script>
  <script src="/static/js/abast.js"></script>
  <script src="/static/js/insp-norm.js"></script>
- <script src="/static/js/insp-petr.js"></script> 
+ <script src="/static/js/insp-petr.js"></script>
+ <script src="/static/js/emb-equip.js"></script> 
  <script src="/static/js/app.js"></script>
 </body>
 </html>

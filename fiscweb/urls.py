@@ -54,4 +54,12 @@ urlpatterns = [
     path('api/insp-petr/<int:insp_petr_id>/subtab/', views.subtab_insp_petr_list, name='subtab_insp_petr_list'),
     path('api/insp-petr-item/<int:item_id>/', views.subtab_insp_petr_detail, name='subtab_insp_petr_detail'),
 
+# API Embarque de Equipes (Principal e subtabelas)
+    path('api/ps/<int:ps_id>/emb-equip/', views.porto_emb_equip_list, name='porto_emb_equip_list'),
+    path('api/emb-equip/<int:emb_equip_id>/', views.porto_emb_equip_detail, name='porto_emb_equip_detail'),
+    path('api/emb-equip/<int:emb_equip_id>/subtab/', views.subtab_emb_equip_list, name='subtab_emb_equip_list'),
+    path('api/emb-equip-item/<int:item_id>/', views.subtab_emb_equip_detail, name='subtab_emb_equip_detail'),
+
+
+
 ]

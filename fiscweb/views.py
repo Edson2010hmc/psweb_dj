@@ -1959,6 +1959,7 @@ def porto_insp_petr_detail(request, insp_petr_id):
                 'error': str(e)
             }, status=400)
 
+
 #================================================INSPEÇÃO PETROBRAS - SUBTABELA - API REST=================================================
 @csrf_exempt
 @require_http_methods(["GET", "POST"])
@@ -2098,7 +2099,300 @@ def subtab_insp_petr_detail(request, item_id):
                 'error': str(e)
             }, status=400)
 
+# ===== ADICIONAR NO FINAL DO ARQUIVO views.py =====
 
+
+#================================================EMBARQUE DE EQUIPES - API REST=================================================
+@csrf_exempt
+@require_http_methods(["GET", "POST"])
+def porto_emb_equip_list(request, ps_id):
+    """
+    GET: Retorna embarque de equipes de uma PS (se existir)
+    POST: Cria novo embarque de equipes para uma PS
+    """
+    
+    try:
+        ps = PassServ.objects.get(id=ps_id)
+    except PassServ.DoesNotExist:
+        print(f"[API ERROR] PS ID {ps_id} não encontrada")
+        return JsonResponse({
+            'success': False,
+            'error': 'Passagem de Serviço não encontrada'
+        }, status=404)
+    
+    if request.method == 'GET':
+        try:
+            emb_equip = PortoEmbEquip.objects.filter(idxPortoEE=ps).first()
+            
+            if not emb_equip:
+                print(f"[API] GET /ps/{ps_id}/emb-equip/ - Nenhum embarque de equipes encontrado")
+                return JsonResponse({
+                    'success': True,
+                    'data': None
+                })
+            
+            print(f"[API] GET /ps/{ps_id}/emb-equip/ - Retornando embarque de equipes ID {emb_equip.id}")
+            
+            return JsonResponse({
+                'success': True,
+                'data': {
+                    'id': emb_equip.id,
+                    'prevEmbEquip': emb_equip.prevEmbEquip,
+                    'ObservEmbEquip': emb_equip.ObservEmbEquip
+                }
+            })
+            
+        except Exception as e:
+            print(f"[API ERROR] GET /ps/{ps_id}/emb-equip/ - {str(e)}")
+            return JsonResponse({
+                'success': False,
+                'error': str(e)
+            }, status=500)
+    
+    elif request.method == 'POST':
+        try:
+            emb_existente = PortoEmbEquip.objects.filter(idxPortoEE=ps).first()
+            if emb_existente:
+                print(f"[API ERROR] POST /ps/{ps_id}/emb-equip/ - Já existe registro para esta PS")
+                return JsonResponse({
+                    'success': False,
+                    'error': 'Já existe registro de Embarque de Equipes para esta PS'
+                }, status=400)
+            
+            print(f"[API] POST /ps/{ps_id}/emb-equip/ - Criando embarque de equipes")
+            
+            emb_equip = PortoEmbEquip.objects.create(
+                idxPortoEE=ps,
+                prevEmbEquip=True,
+                ObservEmbEquip=''
+            )
+            
+            print(f"[API] POST /ps/{ps_id}/emb-equip/ - Embarque de equipes criado com ID: {emb_equip.id}")
+            
+            return JsonResponse({
+                'success': True,
+                'message': 'Registro criado com sucesso',
+                'data': {
+                    'id': emb_equip.id,
+                    'prevEmbEquip': emb_equip.prevEmbEquip,
+                    'ObservEmbEquip': emb_equip.ObservEmbEquip
+                }
+            }, status=201)
+            
+        except Exception as e:
+            print(f"[API ERROR] POST /ps/{ps_id}/emb-equip/ - {str(e)}")
+            return JsonResponse({
+                'success': False,
+                'error': str(e)
+            }, status=400)
+
+@csrf_exempt
+@require_http_methods(["PUT", "DELETE"])
+def porto_emb_equip_detail(request, emb_equip_id):
+    """
+    PUT: Atualiza embarque de equipes
+    DELETE: Remove embarque de equipes
+    """
+    
+    try:
+        emb_equip = PortoEmbEquip.objects.get(id=emb_equip_id)
+    except PortoEmbEquip.DoesNotExist:
+        print(f"[API ERROR] Registro ID {emb_equip_id} não encontrado")
+        return JsonResponse({
+            'success': False,
+            'error': 'Embarque de Equipes não encontrado'
+        }, status=404)
+    
+    if request.method == 'PUT':
+        try:
+            data = json.loads(request.body)
+            
+            print(f"[API] PUT /emb-equip/{emb_equip_id}/ - Atualizando embarque de equipes")
+            
+            emb_equip.prevEmbEquip = data.get('prevEmbEquip', emb_equip.prevEmbEquip)
+            emb_equip.ObservEmbEquip = data.get('ObservEmbEquip', emb_equip.ObservEmbEquip)
+            emb_equip.save()
+            
+            print(f"[API] PUT /emb-equip/{emb_equip_id}/ - Embarque de equipes atualizado")
+            
+            return JsonResponse({
+                'success': True,
+                'message': 'Registro atualizado com sucesso',
+                'data': {
+                    'id': emb_equip.id,
+                    'prevEmbEquip': emb_equip.prevEmbEquip,
+                    'ObservEmbEquip': emb_equip.ObservEmbEquip
+                }
+            })
+            
+        except Exception as e:
+            print(f"[API ERROR] PUT /emb-equip/{emb_equip_id}/ - {str(e)}")
+            return JsonResponse({
+                'success': False,
+                'error': str(e)
+            }, status=400)
+    
+    elif request.method == 'DELETE':
+        try:
+            emb_equip.delete()
+            
+            print(f"[API] DELETE /emb-equip/{emb_equip_id}/ - Embarque de equipes removido")
+            
+            return JsonResponse({
+                'success': True,
+                'message': 'Registro removido com sucesso'
+            })
+            
+        except Exception as e:
+            print(f"[API ERROR] DELETE /emb-equip/{emb_equip_id}/ - {str(e)}")
+            return JsonResponse({
+                'success': False,
+                'error': str(e)
+            }, status=400)
+
+
+#================================================EMBARQUE DE EQUIPES - SUBTABELA - API REST=================================================
+@csrf_exempt
+@require_http_methods(["GET", "POST"])
+def subtab_emb_equip_list(request, emb_equip_id):
+    """
+    GET: Lista itens da subtabela de embarque de equipes
+    POST: Adiciona novo item à subtabela
+    """
+    
+    try:
+        emb_equip = PortoEmbEquip.objects.get(id=emb_equip_id)
+    except PortoEmbEquip.DoesNotExist:
+        print(f"[API ERROR] Embarque de Equipes ID {emb_equip_id} não encontrado")
+        return JsonResponse({
+            'success': False,
+            'error': 'Registro não encontrado'
+        }, status=404)
+    
+    if request.method == 'GET':
+        try:
+            itens = subTabPortoEmbEquip.objects.filter(
+                idxSubTabPortoEE=emb_equip
+            ).values('id', 'DescEmbEquip', 'equipNome', 'equipFuncao', 'equipEmpre')
+            
+            itens_list = list(itens)
+            
+            print(f"[API] GET /subtab-emb-equip/{emb_equip_id}/ - Retornando {len(itens_list)} itens")
+            
+            return JsonResponse({
+                'success': True,
+                'data': itens_list
+            })
+            
+        except Exception as e:
+            print(f"[API ERROR] GET /subtab-emb-equip/{emb_equip_id}/ - {str(e)}")
+            return JsonResponse({
+                'success': False,
+                'error': str(e)
+            }, status=500)
+    
+    elif request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            
+            print(f"[API] POST /subtab-emb-equip/{emb_equip_id}/ - Criando item")
+            
+            item = subTabPortoEmbEquip.objects.create(
+                idxSubTabPortoEE=emb_equip,
+                DescEmbEquip=data.get('DescEmbEquip'),
+                equipNome=data.get('equipNome'),
+                equipFuncao=data.get('equipFuncao'),
+                equipEmpre=data.get('equipEmpre')
+            )
+            
+            print(f"[API] POST /subtab-emb-equip/{emb_equip_id}/ - Item criado com ID: {item.id}")
+            
+            return JsonResponse({
+                'success': True,
+                'message': 'Item adicionado com sucesso',
+                'data': {
+                    'id': item.id,
+                    'DescEmbEquip': item.DescEmbEquip,
+                    'equipNome': item.equipNome,
+                    'equipFuncao': item.equipFuncao,
+                    'equipEmpre': item.equipEmpre
+                }
+            }, status=201)
+            
+        except Exception as e:
+            print(f"[API ERROR] POST /subtab-emb-equip/{emb_equip_id}/ - {str(e)}")
+            return JsonResponse({
+                'success': False,
+                'error': str(e)
+            }, status=400)
+
+@csrf_exempt
+@require_http_methods(["PUT", "DELETE"])
+def subtab_emb_equip_detail(request, item_id):
+    """
+    PUT: Atualiza um item da subtabela
+    DELETE: Remove um item da subtabela
+    """
+    
+    try:
+        item = subTabPortoEmbEquip.objects.get(id=item_id)
+    except subTabPortoEmbEquip.DoesNotExist:
+        print(f"[API ERROR] Item ID {item_id} não encontrado")
+        return JsonResponse({
+            'success': False,
+            'error': 'Item não encontrado'
+        }, status=404)
+    
+    if request.method == 'PUT':
+        try:
+            data = json.loads(request.body)
+            
+            print(f"[API] PUT /subtab-emb-equip-item/{item_id}/ - Atualizando item")
+            
+            item.DescEmbEquip = data.get('DescEmbEquip', item.DescEmbEquip)
+            item.equipNome = data.get('equipNome', item.equipNome)
+            item.equipFuncao = data.get('equipFuncao', item.equipFuncao)
+            item.equipEmpre = data.get('equipEmpre', item.equipEmpre)
+            item.save()
+            
+            print(f"[API] PUT /subtab-emb-equip-item/{item_id}/ - Item atualizado")
+            
+            return JsonResponse({
+                'success': True,
+                'message': 'Item atualizado com sucesso',
+                'data': {
+                    'id': item.id,
+                    'DescEmbEquip': item.DescEmbEquip,
+                    'equipNome': item.equipNome,
+                    'equipFuncao': item.equipFuncao,
+                    'equipEmpre': item.equipEmpre
+                }
+            })
+            
+        except Exception as e:
+            print(f"[API ERROR] PUT /subtab-emb-equip-item/{item_id}/ - {str(e)}")
+            return JsonResponse({
+                'success': False,
+                'error': str(e)
+            }, status=400)
+    
+    elif request.method == 'DELETE':
+        try:
+            item.delete()
+            
+            print(f"[API] DELETE /subtab-emb-equip-item/{item_id}/ - Item removido")
+            
+            return JsonResponse({
+                'success': True,
+                'message': 'Item removido com sucesso'
+            })
+            
+        except Exception as e:
+            print(f"[API ERROR] DELETE /subtab-emb-equip-item/{item_id}/ - {str(e)}")
+            return JsonResponse({
+                'success': False,
+                'error': str(e)
+            }, status=400)
 
 
 
