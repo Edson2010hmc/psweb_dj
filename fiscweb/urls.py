@@ -37,12 +37,21 @@ urlpatterns = [
     path('api/ps/<int:ps_id>/manut-prev/', views.porto_manut_prev_list, name='porto_manut_prev_list'),
     path('api/manut-prev/<int:manut_prev_id>/', views.porto_manut_prev_detail, name='porto_manut_prev_detail'),
 
-
-    # API Inspeção Normativa (Principal)
+    # API Abastecimento
+    path('api/ps/<int:ps_id>/abast/', views.porto_abast_list, name='porto_abast_list'),
+    path('api/abast/<int:abast_id>/', views.porto_abast_detail, name='porto_abast_detail'),
+    path('api/ps/<int:ps_id>/ultimo-abastecimento/', views.buscar_ultimo_abastecimento, name='buscar_ultimo_abastecimento'),
+  
+    # API Inspeção Normativa (Principal e subtabelas)
     path('api/ps/<int:ps_id>/insp-norm/', views.porto_insp_norm_list, name='porto_insp_norm_list'),
     path('api/insp-norm/<int:insp_norm_id>/', views.porto_insp_norm_detail, name='porto_insp_norm_detail'),
-    
-    # API Subtabela Inspeção Normativa
     path('api/insp-norm/<int:insp_norm_id>/subtab/', views.subtab_insp_norm_list, name='subtab_insp_norm_list'),
     path('api/insp-norm-item/<int:item_id>/', views.subtab_insp_norm_detail, name='subtab_insp_norm_detail'),
+
+# API Inspeção Petrobras (Principal e subtabelas)
+    path('api/ps/<int:ps_id>/insp-petr/', views.porto_insp_petr_list, name='porto_insp_petr_list'),
+    path('api/insp-petr/<int:insp_petr_id>/', views.porto_insp_petr_detail, name='porto_insp_petr_detail'),
+    path('api/insp-petr/<int:insp_petr_id>/subtab/', views.subtab_insp_petr_list, name='subtab_insp_petr_list'),
+    path('api/insp-petr-item/<int:item_id>/', views.subtab_insp_petr_detail, name='subtab_insp_petr_detail'),
+
 ]

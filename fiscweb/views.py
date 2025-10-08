@@ -3,6 +3,8 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 import json
+from django.http.multipartparser import MultiPartParser
+from django.core.files.uploadhandler import MemoryFileUploadHandler
 from .models import FiscaisCad,BarcosCad,ModalBarco,PassServ
 from .models import PortoTrocaTurma
 from .models import PortoManutPrev
@@ -872,160 +874,6 @@ def listar_passagens_usuario(request):
             'error': str(e)
         }, status=500)
 
-#================================================INSPEÇÃO NORMATIVA (PRINCIPAL) - API REST=================================================
-@csrf_exempt
-@require_http_methods(["GET", "POST"])
-def porto_insp_norm_list(request, ps_id):
-    """
-    GET: Retorna inspeção normativa de uma PS (se existir)
-    POST: Cria nova inspeção normativa para uma PS
-    """
-    
-    # Verificar se PS existe
-    try:
-        ps = PassServ.objects.get(id=ps_id)
-    except PassServ.DoesNotExist:
-        print(f"[API ERROR] PS ID {ps_id} não encontrada")
-        return JsonResponse({
-            'success': False,
-            'error': 'Passagem de Serviço não encontrada'
-        }, status=404)
-    
-    if request.method == 'GET':
-        try:
-            insp_norm = PortoInspNorm.objects.filter(idxPortoIN=ps).first()
-            
-            if not insp_norm:
-                print(f"[API] GET /ps/{ps_id}/insp-norm/ - Nenhuma inspeção encontrada")
-                return JsonResponse({
-                    'success': True,
-                    'data': None
-                })
-            
-            print(f"[API] GET /ps/{ps_id}/insp-norm/ - Retornando inspeção ID {insp_norm.id}")
-            
-            return JsonResponse({
-                'success': True,
-                'data': {
-                    'id': insp_norm.id,
-                    'prevInsNorm': insp_norm.prevInsNorm,
-                    'ObservInspNorm': insp_norm.ObservInspNorm
-                }
-            })
-            
-        except Exception as e:
-            print(f"[API ERROR] GET /ps/{ps_id}/insp-norm/ - {str(e)}")
-            return JsonResponse({
-                'success': False,
-                'error': str(e)
-            }, status=500)
-    
-    elif request.method == 'POST':
-        try:
-            data = json.loads(request.body)
-            
-            # Verificar se já existe
-            insp_existente = PortoInspNorm.objects.filter(idxPortoIN=ps).first()
-            if insp_existente:
-                print(f"[API ERROR] POST /ps/{ps_id}/insp-norm/ - Já existe inspeção para esta PS")
-                return JsonResponse({
-                    'success': False,
-                    'error': 'Já existe inspeção normativa para esta PS'
-                }, status=400)
-            
-            print(f"[API] POST /ps/{ps_id}/insp-norm/ - Criando inspeção")
-            
-            insp_norm = PortoInspNorm.objects.create(
-                idxPortoIN=ps,
-                prevInsNorm=data.get('prevInsNorm', False),
-                ObservInspNorm=data.get('ObservInspNorm', '')
-            )
-            
-            print(f"[API] POST /ps/{ps_id}/insp-norm/ - Inspeção criada com ID: {insp_norm.id}")
-            
-            return JsonResponse({
-                'success': True,
-                'message': 'Inspeção Normativa criada com sucesso',
-                'data': {
-                    'id': insp_norm.id,
-                    'prevInsNorm': insp_norm.prevInsNorm,
-                    'ObservInspNorm': insp_norm.ObservInspNorm
-                }
-            }, status=201)
-            
-        except Exception as e:
-            print(f"[API ERROR] POST /ps/{ps_id}/insp-norm/ - {str(e)}")
-            return JsonResponse({
-                'success': False,
-                'error': str(e)
-            }, status=400)
-
-@csrf_exempt
-@require_http_methods(["PUT", "DELETE"])
-def porto_insp_norm_detail(request, insp_norm_id):
-    """
-    PUT: Atualiza inspeção normativa
-    DELETE: Remove inspeção normativa
-    """
-    
-    try:
-        insp_norm = PortoInspNorm.objects.get(id=insp_norm_id)
-    except PortoInspNorm.DoesNotExist:
-        print(f"[API ERROR] Inspeção Normativa ID {insp_norm_id} não encontrada")
-        return JsonResponse({
-            'success': False,
-            'error': 'Inspeção Normativa não encontrada'
-        }, status=404)
-    
-    if request.method == 'PUT':
-        try:
-            data = json.loads(request.body)
-            
-            print(f"[API] PUT /insp-norm/{insp_norm_id}/ - Atualizando inspeção")
-            
-            insp_norm.prevInsNorm = data.get('prevInsNorm', insp_norm.prevInsNorm)
-            insp_norm.ObservInspNorm = data.get('ObservInspNorm', insp_norm.ObservInspNorm)
-            insp_norm.save()
-            
-            print(f"[API] PUT /insp-norm/{insp_norm_id}/ - Inspeção atualizada")
-            
-            return JsonResponse({
-                'success': True,
-                'message': 'Inspeção Normativa atualizada com sucesso',
-                'data': {
-                    'id': insp_norm.id,
-                    'prevInsNorm': insp_norm.prevInsNorm,
-                    'ObservInspNorm': insp_norm.ObservInspNorm
-                }
-            })
-            
-        except Exception as e:
-            print(f"[API ERROR] PUT /insp-norm/{insp_norm_id}/ - {str(e)}")
-            return JsonResponse({
-                'success': False,
-                'error': str(e)
-            }, status=400)
-    
-    elif request.method == 'DELETE':
-        try:
-            # Ao deletar, remove também todos os itens da subtabela (CASCADE)
-            insp_norm.delete()
-            
-            print(f"[API] DELETE /insp-norm/{insp_norm_id}/ - Inspeção removida")
-            
-            return JsonResponse({
-                'success': True,
-                'message': 'Inspeção Normativa removida com sucesso'
-            })
-            
-        except Exception as e:
-            print(f"[API ERROR] DELETE /insp-norm/{insp_norm_id}/ - {str(e)}")
-            return JsonResponse({
-                'success': False,
-                'error': str(e)
-            }, status=400)
-
-
 #================================================TROCA DE TURMA - API REST=================================================
 @csrf_exempt
 @require_http_methods(["GET", "POST"])
@@ -1321,20 +1169,54 @@ def porto_manut_prev_detail(request, manut_prev_id):
         try:
             print(f"[API] PUT /manut-prev/{manut_prev_id}/ - Atualizando manutenção preventiva")
             
-            # Dados vêm de request.POST quando tem arquivo
-            manut_prev.prevManPrev = request.POST.get('prevManPrev', str(manut_prev.prevManPrev)).lower() == 'true'
-            manut_prev.Franquia = int(request.POST.get('Franquia', manut_prev.Franquia))
-            manut_prev.SaldoFranquia = int(request.POST.get('SaldoFranquia', manut_prev.SaldoFranquia))
-            manut_prev.OrdSerManutPrev = request.POST.get('OrdSerManutPrev', manut_prev.OrdSerManutPrev)
-            manut_prev.ObservManPrev = request.POST.get('ObservManPrev', manut_prev.ObservManPrev)
+            # Parser para FormData em requisições PUT
+            if request.content_type and 'multipart/form-data' in request.content_type:
+                # Parsear multipart data manualmente
+                parser = MultiPartParser(request.META, request, [MemoryFileUploadHandler()])
+                PUT, FILES = parser.parse()
+                
+                print(f"[DEBUG] PUT data parseado: {dict(PUT)}")
+                print(f"[DEBUG] FILES parseado: {list(FILES.keys())}")
+            else:
+                PUT = request.POST
+                FILES = request.FILES
             
-            # Atualizar arquivo apenas se novo arquivo foi enviado
-            if 'Rade' in request.FILES:
-                manut_prev.Rade = request.FILES['Rade']
+            # Atualizar campos
+            if 'prevManPrev' in PUT:
+                manut_prev.prevManPrev = PUT.get('prevManPrev', 'false').lower() == 'true'
+            
+            if 'Franquia' in PUT:
+                franquia = PUT.get('Franquia', '0')
+                manut_prev.Franquia = int(franquia) if franquia else 0
+            
+            if 'SaldoFranquia' in PUT:
+                saldo = PUT.get('SaldoFranquia', '0')
+                manut_prev.SaldoFranquia = int(saldo) if saldo else 0
+            
+            if 'OrdSerManutPrev' in PUT:
+                manut_prev.OrdSerManutPrev = PUT.get('OrdSerManutPrev', '')
+            
+            if 'ObservManPrev' in PUT:
+                manut_prev.ObservManPrev = PUT.get('ObservManPrev', '')
+            
+            # Atualizar arquivo se foi enviado
+            if 'Rade' in FILES:
+                print(f"[DEBUG] Arquivo recebido: {FILES['Rade'].name}")
+                
+                # Deletar arquivo antigo se existir
+                if manut_prev.Rade:
+                    import os
+                    try:
+                        if os.path.isfile(manut_prev.Rade.path):
+                            os.remove(manut_prev.Rade.path)
+                    except:
+                        pass
+                
+                manut_prev.Rade = FILES['Rade']
             
             manut_prev.save()
             
-            print(f"[API] PUT /manut-prev/{manut_prev_id}/ - Manutenção preventiva atualizada")
+            print(f"[API] PUT /manut-prev/{manut_prev_id}/ - Dados salvos: Franquia={manut_prev.Franquia}, Saldo={manut_prev.SaldoFranquia}, OS={manut_prev.OrdSerManutPrev}")
             
             return JsonResponse({
                 'success': True,
@@ -1353,6 +1235,211 @@ def porto_manut_prev_detail(request, manut_prev_id):
             
         except Exception as e:
             print(f"[API ERROR] PUT /manut-prev/{manut_prev_id}/ - {str(e)}")
+            import traceback
+            traceback.print_exc()
+            return JsonResponse({
+                'success': False,
+                'error': str(e)
+            }, status=400)
+
+
+#================================================ABASTECIMENTO - API REST=================================================
+@csrf_exempt
+@require_http_methods(["GET", "POST"])
+def porto_abast_list(request, ps_id):
+    """
+    GET: Retorna abastecimento de uma PS (se existir)
+    POST: Cria novo abastecimento para uma PS
+    """
+    
+    # Verificar se PS existe
+    try:
+        ps = PassServ.objects.get(id=ps_id)
+    except PassServ.DoesNotExist:
+        print(f"[API ERROR] PS ID {ps_id} não encontrada")
+        return JsonResponse({
+            'success': False,
+            'error': 'Passagem de Serviço não encontrada'
+        }, status=404)
+    
+    if request.method == 'GET':
+        try:
+            abast = PortoAbast.objects.filter(idxPortoAB=ps).first()
+            
+            if not abast:
+                print(f"[API] GET /ps/{ps_id}/abast/ - Nenhum abastecimento encontrado")
+                return JsonResponse({
+                    'success': True,
+                    'data': None
+                })
+            
+            print(f"[API] GET /ps/{ps_id}/abast/ - Retornando abastecimento ID {abast.id}")
+            
+            return JsonResponse({
+                'success': True,
+                'data': {
+                    'id': abast.id,
+                    'prevAbast': abast.prevAbast,
+                    'OrdSerAbast': abast.OrdSerAbast or '',
+                    'DataHoraPrevAbast': abast.DataHoraPrevAbast.isoformat() if abast.DataHoraPrevAbast else None,
+                    'QuantAbast': abast.QuantAbast,
+                    'DuracPrev': abast.DuracPrev,
+                    'UltAbast': str(abast.UltAbast) if abast.UltAbast else None,
+                    'QuantUltAbast': abast.QuantUltAbast,
+                    'Anexos': abast.Anexos.url if abast.Anexos else None,
+                    'AnexosNome': abast.Anexos.name.split('/')[-1] if abast.Anexos else None,
+                    'ObservAbast': abast.ObservAbast or ''
+                }
+            })
+            
+        except Exception as e:
+            print(f"[API ERROR] GET /ps/{ps_id}/abast/ - {str(e)}")
+            return JsonResponse({
+                'success': False,
+                'error': str(e)
+            }, status=500)
+    
+    elif request.method == 'POST':
+        try:
+            # Verificar se já existe
+            abast_existente = PortoAbast.objects.filter(idxPortoAB=ps).first()
+            if abast_existente:
+                print(f"[API ERROR] POST /ps/{ps_id}/abast/ - Já existe abastecimento para esta PS")
+                return JsonResponse({
+                    'success': False,
+                    'error': 'Já existe abastecimento para esta PS'
+                }, status=400)
+            
+            print(f"[API] POST /ps/{ps_id}/abast/ - Criando abastecimento")
+            
+            abast = PortoAbast.objects.create(
+                idxPortoAB=ps,
+                prevAbast=True,
+                OrdSerAbast='',
+                ObservAbast=''
+            )
+            
+            print(f"[API] POST /ps/{ps_id}/abast/ - Abastecimento criado com ID: {abast.id}")
+            
+            return JsonResponse({
+                'success': True,
+                'message': 'Abastecimento criado com sucesso',
+                'data': {
+                    'id': abast.id,
+                    'prevAbast': abast.prevAbast
+                }
+            }, status=201)
+            
+        except Exception as e:
+            print(f"[API ERROR] POST /ps/{ps_id}/abast/ - {str(e)}")
+            return JsonResponse({
+                'success': False,
+                'error': str(e)
+            }, status=400)
+
+@csrf_exempt
+@require_http_methods(["PUT", "DELETE"])
+def porto_abast_detail(request, abast_id):
+    """
+    PUT: Atualiza abastecimento
+    DELETE: Remove abastecimento
+    """
+    
+    try:
+        abast = PortoAbast.objects.get(id=abast_id)
+    except PortoAbast.DoesNotExist:
+        print(f"[API ERROR] Abastecimento ID {abast_id} não encontrado")
+        return JsonResponse({
+            'success': False,
+            'error': 'Abastecimento não encontrado'
+        }, status=404)
+    
+    if request.method == 'PUT':
+        try:
+            print(f"[API] PUT /abast/{abast_id}/ - Atualizando abastecimento")
+            
+            # Parser para FormData em requisições PUT
+            if request.content_type and 'multipart/form-data' in request.content_type:
+                parser = MultiPartParser(request.META, request, [MemoryFileUploadHandler()])
+                PUT, FILES = parser.parse()
+                print(f"[DEBUG] PUT data parseado: {dict(PUT)}")
+                print(f"[DEBUG] FILES parseado: {list(FILES.keys())}")
+            else:
+                PUT = request.POST
+                FILES = request.FILES
+            
+            # Atualizar campos
+            if 'prevAbast' in PUT:
+                abast.prevAbast = PUT.get('prevAbast', 'false').lower() == 'true'
+            
+            if 'OrdSerAbast' in PUT:
+                abast.OrdSerAbast = PUT.get('OrdSerAbast', '')
+            
+            if 'DataHoraPrevAbast' in PUT:
+                data_hora = PUT.get('DataHoraPrevAbast')
+                if data_hora:
+                    from django.utils.dateparse import parse_datetime
+                    abast.DataHoraPrevAbast = parse_datetime(data_hora)
+            
+            if 'QuantAbast' in PUT:
+                qtd = PUT.get('QuantAbast', '')
+                abast.QuantAbast = int(qtd) if qtd else None
+            
+            if 'DuracPrev' in PUT:
+                duracao = PUT.get('DuracPrev', '')
+                abast.DuracPrev = int(duracao) if duracao else None
+            
+            if 'UltAbast' in PUT:
+                abast.UltAbast = PUT.get('UltAbast') or None
+            
+            if 'QuantUltAbast' in PUT:
+                qtd_ult = PUT.get('QuantUltAbast', '')
+                abast.QuantUltAbast = int(qtd_ult) if qtd_ult else None
+            
+            if 'ObservAbast' in PUT:
+                abast.ObservAbast = PUT.get('ObservAbast', '')
+            
+            # Atualizar arquivo se foi enviado
+            if 'Anexos' in FILES:
+                print(f"[DEBUG] Arquivo recebido: {FILES['Anexos'].name}")
+                
+                # Deletar arquivo antigo se existir
+                if abast.Anexos:
+                    import os
+                    try:
+                        if os.path.isfile(abast.Anexos.path):
+                            os.remove(abast.Anexos.path)
+                    except:
+                        pass
+                
+                abast.Anexos = FILES['Anexos']
+            
+            abast.save()
+            
+            print(f"[API] PUT /abast/{abast_id}/ - Dados salvos")
+            
+            return JsonResponse({
+                'success': True,
+                'message': 'Abastecimento atualizado com sucesso',
+                'data': {
+                    'id': abast.id,
+                    'prevAbast': abast.prevAbast,
+                    'OrdSerAbast': abast.OrdSerAbast or '',
+                    'DataHoraPrevAbast': abast.DataHoraPrevAbast.isoformat() if abast.DataHoraPrevAbast else None,
+                    'QuantAbast': abast.QuantAbast,
+                    'DuracPrev': abast.DuracPrev,
+                    'UltAbast': str(abast.UltAbast) if abast.UltAbast else None,
+                    'QuantUltAbast': abast.QuantUltAbast,
+                    'Anexos': abast.Anexos.url if abast.Anexos else None,
+                    'AnexosNome': abast.Anexos.name.split('/')[-1] if abast.Anexos else None,
+                    'ObservAbast': abast.ObservAbast or ''
+                }
+            })
+            
+        except Exception as e:
+            print(f"[API ERROR] PUT /abast/{abast_id}/ - {str(e)}")
+            import traceback
+            traceback.print_exc()
             return JsonResponse({
                 'success': False,
                 'error': str(e)
@@ -1360,17 +1447,228 @@ def porto_manut_prev_detail(request, manut_prev_id):
     
     elif request.method == 'DELETE':
         try:
-            manut_prev.delete()
+            abast.delete()
             
-            print(f"[API] DELETE /manut-prev/{manut_prev_id}/ - Manutenção preventiva removida")
+            print(f"[API] DELETE /abast/{abast_id}/ - Abastecimento removido")
             
             return JsonResponse({
                 'success': True,
-                'message': 'Manutenção Preventiva removida com sucesso'
+                'message': 'Abastecimento removido com sucesso'
             })
             
         except Exception as e:
-            print(f"[API ERROR] DELETE /manut-prev/{manut_prev_id}/ - {str(e)}")
+            print(f"[API ERROR] DELETE /abast/{abast_id}/ - {str(e)}")
+            return JsonResponse({
+                'success': False,
+                'error': str(e)
+            }, status=400)
+
+@csrf_exempt
+@require_http_methods(["GET"])
+def buscar_ultimo_abastecimento(request, ps_id):
+    """
+    Busca o último abastecimento em PSs anteriores da mesma embarcação
+    """
+    try:
+        ps_atual = PassServ.objects.get(id=ps_id)
+    except PassServ.DoesNotExist:
+        return JsonResponse({
+            'success': False,
+            'error': 'PS não encontrada'
+        }, status=404)
+    
+    try:
+        # Buscar PSs anteriores da mesma embarcação, ordenadas da mais recente para mais antiga
+        ps_anteriores = PassServ.objects.filter(
+            BarcoPS=ps_atual.BarcoPS,
+            dataEmissaoPS__lt=ps_atual.dataEmissaoPS
+        ).order_by('-dataEmissaoPS')
+        
+        print(f"[API] Buscando último abastecimento para {ps_atual.BarcoPS} - {ps_anteriores.count()} PSs anteriores encontradas")
+        
+        # Percorrer PSs anteriores buscando abastecimento
+        for ps_ant in ps_anteriores:
+            abast = PortoAbast.objects.filter(idxPortoAB=ps_ant, prevAbast=True).first()
+            
+            if abast and abast.DataHoraPrevAbast and abast.QuantAbast:
+                print(f"[API] Último abastecimento encontrado na PS {ps_ant.numPS}/{ps_ant.anoPS}")
+                
+                return JsonResponse({
+                    'success': True,
+                    'encontrado': True,
+                    'data': {
+                        'UltAbast': abast.DataHoraPrevAbast.date().isoformat(),
+                        'QuantUltAbast': abast.QuantAbast,
+                        'psOrigem': f"{ps_ant.numPS}/{ps_ant.anoPS}"
+                    }
+                })
+        
+        # Não encontrou em nenhuma PS anterior
+        print(f"[API] Nenhum abastecimento encontrado em PSs anteriores")
+        
+        return JsonResponse({
+            'success': True,
+            'encontrado': False,
+            'mensagem': 'Não Informado em PSs anteriores'
+        })
+        
+    except Exception as e:
+        print(f"[API ERROR] Erro ao buscar último abastecimento: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=500)
+
+#================================================INSPEÇÃO NORMATIVA (PRINCIPAL) - API REST=================================================
+@csrf_exempt
+@require_http_methods(["GET", "POST"])
+def porto_insp_norm_list(request, ps_id):
+    """
+    GET: Retorna inspeção normativa de uma PS (se existir)
+    POST: Cria nova inspeção normativa para uma PS
+    """
+    
+    # Verificar se PS existe
+    try:
+        ps = PassServ.objects.get(id=ps_id)
+    except PassServ.DoesNotExist:
+        print(f"[API ERROR] PS ID {ps_id} não encontrada")
+        return JsonResponse({
+            'success': False,
+            'error': 'Passagem de Serviço não encontrada'
+        }, status=404)
+    
+    if request.method == 'GET':
+        try:
+            insp_norm = PortoInspNorm.objects.filter(idxPortoIN=ps).first()
+            
+            if not insp_norm:
+                print(f"[API] GET /ps/{ps_id}/insp-norm/ - Nenhuma inspeção encontrada")
+                return JsonResponse({
+                    'success': True,
+                    'data': None
+                })
+            
+            print(f"[API] GET /ps/{ps_id}/insp-norm/ - Retornando inspeção ID {insp_norm.id}")
+            
+            return JsonResponse({
+                'success': True,
+                'data': {
+                    'id': insp_norm.id,
+                    'prevInsNorm': insp_norm.prevInsNorm,
+                    'ObservInspNorm': insp_norm.ObservInspNorm
+                }
+            })
+            
+        except Exception as e:
+            print(f"[API ERROR] GET /ps/{ps_id}/insp-norm/ - {str(e)}")
+            return JsonResponse({
+                'success': False,
+                'error': str(e)
+            }, status=500)
+    
+    elif request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            
+            # Verificar se já existe
+            insp_existente = PortoInspNorm.objects.filter(idxPortoIN=ps).first()
+            if insp_existente:
+                print(f"[API ERROR] POST /ps/{ps_id}/insp-norm/ - Já existe inspeção para esta PS")
+                return JsonResponse({
+                    'success': False,
+                    'error': 'Já existe inspeção normativa para esta PS'
+                }, status=400)
+            
+            print(f"[API] POST /ps/{ps_id}/insp-norm/ - Criando inspeção")
+            
+            insp_norm = PortoInspNorm.objects.create(
+                idxPortoIN=ps,
+                prevInsNorm=data.get('prevInsNorm', False),
+                ObservInspNorm=data.get('ObservInspNorm', '')
+            )
+            
+            print(f"[API] POST /ps/{ps_id}/insp-norm/ - Inspeção criada com ID: {insp_norm.id}")
+            
+            return JsonResponse({
+                'success': True,
+                'message': 'Inspeção Normativa criada com sucesso',
+                'data': {
+                    'id': insp_norm.id,
+                    'prevInsNorm': insp_norm.prevInsNorm,
+                    'ObservInspNorm': insp_norm.ObservInspNorm
+                }
+            }, status=201)
+            
+        except Exception as e:
+            print(f"[API ERROR] POST /ps/{ps_id}/insp-norm/ - {str(e)}")
+            return JsonResponse({
+                'success': False,
+                'error': str(e)
+            }, status=400)
+
+@csrf_exempt
+@require_http_methods(["PUT", "DELETE"])
+def porto_insp_norm_detail(request, insp_norm_id):
+    """
+    PUT: Atualiza inspeção normativa
+    DELETE: Remove inspeção normativa
+    """
+    
+    try:
+        insp_norm = PortoInspNorm.objects.get(id=insp_norm_id)
+    except PortoInspNorm.DoesNotExist:
+        print(f"[API ERROR] Inspeção Normativa ID {insp_norm_id} não encontrada")
+        return JsonResponse({
+            'success': False,
+            'error': 'Inspeção Normativa não encontrada'
+        }, status=404)
+    
+    if request.method == 'PUT':
+        try:
+            data = json.loads(request.body)
+            
+            print(f"[API] PUT /insp-norm/{insp_norm_id}/ - Atualizando inspeção")
+            
+            insp_norm.prevInsNorm = data.get('prevInsNorm', insp_norm.prevInsNorm)
+            insp_norm.ObservInspNorm = data.get('ObservInspNorm', insp_norm.ObservInspNorm)
+            insp_norm.save()
+            
+            print(f"[API] PUT /insp-norm/{insp_norm_id}/ - Inspeção atualizada")
+            
+            return JsonResponse({
+                'success': True,
+                'message': 'Inspeção Normativa atualizada com sucesso',
+                'data': {
+                    'id': insp_norm.id,
+                    'prevInsNorm': insp_norm.prevInsNorm,
+                    'ObservInspNorm': insp_norm.ObservInspNorm
+                }
+            })
+            
+        except Exception as e:
+            print(f"[API ERROR] PUT /insp-norm/{insp_norm_id}/ - {str(e)}")
+            return JsonResponse({
+                'success': False,
+                'error': str(e)
+            }, status=400)
+    
+    elif request.method == 'DELETE':
+        try:
+            # Ao deletar, remove também todos os itens da subtabela (CASCADE)
+            insp_norm.delete()
+            
+            print(f"[API] DELETE /insp-norm/{insp_norm_id}/ - Inspeção removida")
+            
+            return JsonResponse({
+                'success': True,
+                'message': 'Inspeção Normativa removida com sucesso'
+            })
+            
+        except Exception as e:
+            print(f"[API ERROR] DELETE /insp-norm/{insp_norm_id}/ - {str(e)}")
             return JsonResponse({
                 'success': False,
                 'error': str(e)
@@ -1513,9 +1811,292 @@ def subtab_insp_norm_detail(request, item_id):
             }, status=400)
 
 
+#================================================INSPEÇÃO PETROBRAS - API REST=================================================
+@csrf_exempt
+@require_http_methods(["GET", "POST"])
+def porto_insp_petr_list(request, ps_id):
+    """
+    GET: Retorna inspeção Petrobras de uma PS (se existir)
+    POST: Cria nova inspeção Petrobras para uma PS
+    """
+    
+    try:
+        ps = PassServ.objects.get(id=ps_id)
+    except PassServ.DoesNotExist:
+        print(f"[API ERROR] PS ID {ps_id} não encontrada")
+        return JsonResponse({
+            'success': False,
+            'error': 'Passagem de Serviço não encontrada'
+        }, status=404)
+    
+    if request.method == 'GET':
+        try:
+            insp_petr = PortoInspPetr.objects.filter(idxPortoIP=ps).first()
+            
+            if not insp_petr:
+                print(f"[API] GET /ps/{ps_id}/insp-petr/ - Nenhuma inspeção Petrobras encontrada")
+                return JsonResponse({
+                    'success': True,
+                    'data': None
+                })
+            
+            print(f"[API] GET /ps/{ps_id}/insp-petr/ - Retornando inspeção Petrobras ID {insp_petr.id}")
+            
+            return JsonResponse({
+                'success': True,
+                'data': {
+                    'id': insp_petr.id,
+                    'prevInspPetr': insp_petr.prevInspPetr,
+                    'ObservInspPetr': insp_petr.ObservInspPetr
+                }
+            })
+            
+        except Exception as e:
+            print(f"[API ERROR] GET /ps/{ps_id}/insp-petr/ - {str(e)}")
+            return JsonResponse({
+                'success': False,
+                'error': str(e)
+            }, status=500)
+    
+    elif request.method == 'POST':
+        try:
+            insp_existente = PortoInspPetr.objects.filter(idxPortoIP=ps).first()
+            if insp_existente:
+                print(f"[API ERROR] POST /ps/{ps_id}/insp-petr/ - Já existe inspeção Petrobras para esta PS")
+                return JsonResponse({
+                    'success': False,
+                    'error': 'Já existe Registro de Insara esta PS'
+                }, status=400)
+            
+            print(f"[API] POST /ps/{ps_id}/insp-petr/ - Criando inspeção Petrobras")
+            
+            insp_petr = PortoInspPetr.objects.create(
+                idxPortoIP=ps,
+                prevInspPetr=True,
+                ObservInspPetr=''
+            )
+            
+            print(f"[API] POST /ps/{ps_id}/insp-petr/ - Inspeção Petrobras criada com ID: {insp_petr.id}")
+            
+            return JsonResponse({
+                'success': True,
+                'message': 'Resgistro criado com sucesso',
+                'data': {
+                    'id': insp_petr.id,
+                    'prevInspPetr': insp_petr.prevInspPetr,
+                    'ObservInspPetr': insp_petr.ObservInspPetr
+                }
+            }, status=201)
+            
+        except Exception as e:
+            print(f"[API ERROR] POST /ps/{ps_id}/insp-petr/ - {str(e)}")
+            return JsonResponse({
+                'success': False,
+                'error': str(e)
+            }, status=400)
 
+@csrf_exempt
+@require_http_methods(["PUT", "DELETE"])
+def porto_insp_petr_detail(request, insp_petr_id):
+    """
+    PUT: Atualiza inspeção Petrobras
+    DELETE: Remove inspeção Petrobras
+    """
+    
+    try:
+        insp_petr = PortoInspPetr.objects.get(id=insp_petr_id)
+    except PortoInspPetr.DoesNotExist:
+        print(f"[API ERROR] Registro ID {insp_petr_id} não encontrada")
+        return JsonResponse({
+            'success': False,
+            'error': 'Inspeção Petrobras não encontrada'
+        }, status=404)
+    
+    if request.method == 'PUT':
+        try:
+            data = json.loads(request.body)
+            
+            print(f"[API] PUT /insp-petr/{insp_petr_id}/ - Atualizando inspeção Petrobras")
+            
+            insp_petr.prevInspPetr = data.get('prevInspPetr', insp_petr.prevInspPetr)
+            insp_petr.ObservInspPetr = data.get('ObservInspPetr', insp_petr.ObservInspPetr)
+            insp_petr.save()
+            
+            print(f"[API] PUT /insp-petr/{insp_petr_id}/ - Inspeção Petrobras atualizada")
+            
+            return JsonResponse({
+                'success': True,
+                'message': 'Registro atualizado com sucesso',
+                'data': {
+                    'id': insp_petr.id,
+                    'prevInspPetr': insp_petr.prevInspPetr,
+                    'ObservInspPetr': insp_petr.ObservInspPetr
+                }
+            })
+            
+        except Exception as e:
+            print(f"[API ERROR] PUT /insp-petr/{insp_petr_id}/ - {str(e)}")
+            return JsonResponse({
+                'success': False,
+                'error': str(e)
+            }, status=400)
+    
+    elif request.method == 'DELETE':
+        try:
+            insp_petr.delete()
+            
+            print(f"[API] DELETE /insp-petr/{insp_petr_id}/ - Inspeção Petrobras removida")
+            
+            return JsonResponse({
+                'success': True,
+                'message': 'Registro removido com sucesso'
+            })
+            
+        except Exception as e:
+            print(f"[API ERROR] DELETE /insp-petr/{insp_petr_id}/ - {str(e)}")
+            return JsonResponse({
+                'success': False,
+                'error': str(e)
+            }, status=400)
 
+#================================================INSPEÇÃO PETROBRAS - SUBTABELA - API REST=================================================
+@csrf_exempt
+@require_http_methods(["GET", "POST"])
+def subtab_insp_petr_list(request, insp_petr_id):
+    """
+    GET: Lista itens da subtabela de inspeção Petrobras
+    POST: Adiciona novo item à subtabela
+    """
+    
+    try:
+        insp_petr = PortoInspPetr.objects.get(id=insp_petr_id)
+    except PortoInspPetr.DoesNotExist:
+        print(f"[API ERROR] Inspeção Petrobras ID {insp_petr_id} não encontrada")
+        return JsonResponse({
+            'success': False,
+            'error': 'Registro não encontrado'
+        }, status=404)
+    
+    if request.method == 'GET':
+        try:
+            itens = subTabPortoInspPetr.objects.filter(
+                idxsubTabPortoIP=insp_petr
+            ).values('id', 'DescInspPetr', 'auditorPetr', 'gerAuditorPetr')
+            
+            itens_list = list(itens)
+            
+            print(f"[API] GET /subtab-insp-petr/{insp_petr_id}/ - Retornando {len(itens_list)} itens")
+            
+            return JsonResponse({
+                'success': True,
+                'data': itens_list
+            })
+            
+        except Exception as e:
+            print(f"[API ERROR] GET /subtab-insp-petr/{insp_petr_id}/ - {str(e)}")
+            return JsonResponse({
+                'success': False,
+                'error': str(e)
+            }, status=500)
+    
+    elif request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            
+            print(f"[API] POST /subtab-insp-petr/{insp_petr_id}/ - Criando item")
+            
+            item = subTabPortoInspPetr.objects.create(
+                idxsubTabPortoIP=insp_petr,
+                DescInspPetr=data.get('DescInspPetr'),
+                auditorPetr=data.get('auditorPetr'),
+                gerAuditorPetr=data.get('gerAuditorPetr')
+            )
+            
+            print(f"[API] POST /subtab-insp-petr/{insp_petr_id}/ - Item criado com ID: {item.id}")
+            
+            return JsonResponse({
+                'success': True,
+                'message': 'Item adicionado com sucesso',
+                'data': {
+                    'id': item.id,
+                    'DescInspPetr': item.DescInspPetr,
+                    'auditorPetr': item.auditorPetr,
+                    'gerAuditorPetr': item.gerAuditorPetr
+                }
+            }, status=201)
+            
+        except Exception as e:
+            print(f"[API ERROR] POST /subtab-insp-petr/{insp_petr_id}/ - {str(e)}")
+            return JsonResponse({
+                'success': False,
+                'error': str(e)
+            }, status=400)
 
+@csrf_exempt
+@require_http_methods(["PUT", "DELETE"])
+def subtab_insp_petr_detail(request, item_id):
+    """
+    PUT: Atualiza um item da subtabela
+    DELETE: Remove um item da subtabela
+    """
+    
+    try:
+        item = subTabPortoInspPetr.objects.get(id=item_id)
+    except subTabPortoInspPetr.DoesNotExist:
+        print(f"[API ERROR] Item ID {item_id} não encontrado")
+        return JsonResponse({
+            'success': False,
+            'error': 'Item não encontrado'
+        }, status=404)
+    
+    if request.method == 'PUT':
+        try:
+            data = json.loads(request.body)
+            
+            print(f"[API] PUT /subtab-insp-petr-item/{item_id}/ - Atualizando item")
+            
+            item.DescInspPetr = data.get('DescInspPetr', item.DescInspPetr)
+            item.auditorPetr = data.get('auditorPetr', item.auditorPetr)
+            item.gerAuditorPetr = data.get('gerAuditorPetr', item.gerAuditorPetr)
+            item.save()
+            
+            print(f"[API] PUT /subtab-insp-petr-item/{item_id}/ - Item atualizado")
+            
+            return JsonResponse({
+                'success': True,
+                'message': 'Item atualizado com sucesso',
+                'data': {
+                    'id': item.id,
+                    'DescInspPetr': item.DescInspPetr,
+                    'auditorPetr': item.auditorPetr,
+                    'gerAuditorPetr': item.gerAuditorPetr
+                }
+            })
+            
+        except Exception as e:
+            print(f"[API ERROR] PUT /subtab-insp-petr-item/{item_id}/ - {str(e)}")
+            return JsonResponse({
+                'success': False,
+                'error': str(e)
+            }, status=400)
+    
+    elif request.method == 'DELETE':
+        try:
+            item.delete()
+            
+            print(f"[API] DELETE /subtab-insp-petr-item/{item_id}/ - Item removido")
+            
+            return JsonResponse({
+                'success': True,
+                'message': 'Item removido com sucesso'
+            })
+            
+        except Exception as e:
+            print(f"[API ERROR] DELETE /subtab-insp-petr-item/{item_id}/ - {str(e)}")
+            return JsonResponse({
+                'success': False,
+                'error': str(e)
+            }, status=400)
 
 
 

@@ -125,9 +125,17 @@ const PassagensModule = (() => {
         ManutPrevModule.limpar();
       }
 
+      if (typeof AbastModule !== 'undefined' && AbastModule.limpar) {
+        AbastModule.limpar();
+      }
+
       if (typeof InspNormModule !== 'undefined' && InspNormModule.limpar) {
         InspNormModule.limpar();
       }
+
+      if (typeof InspPetrModule !== 'undefined' && InspPetrModule.limpar) {
+        InspPetrModule.limpar();
+}
 
       // Fechar modal e  guardar ID da PS atual
       psAtualId = createResult.data.id;
@@ -201,9 +209,20 @@ if (typeof ManutPrevModule !== 'undefined' && ManutPrevModule.carregarDados) {
   ManutPrevModule.carregarDados(psData.id);
 }
 
+// Carregar Modulo Abastecimento
+if (typeof AbastModule !== 'undefined' && AbastModule.carregarDados) {
+  AbastModule.carregarDados(psData.id);
+}
+
+
 // Carregar modulo Inspeção Normativa
 if (typeof InspNormModule !== 'undefined' && InspNormModule.carregarDados) {
   InspNormModule.carregarDados(psData.id);
+}
+
+// Carregar Inspeção Petrobras
+if (typeof InspPetrModule !== 'undefined' && InspPetrModule.carregarDados) {
+  InspPetrModule.carregarDados(psData.id);
 }
 
 
@@ -387,10 +406,20 @@ async function salvarRascunho(psId, silencioso = false) {
       await ManutPrevModule.salvar();
     }
 
+    // Salvar modulo Abastecimento
+    if (typeof AbastModule !== 'undefined' && AbastModule.salvar) {
+      await AbastModule.salvar();
+    }
+
     // Salvar dados Modulo Inspeção Normativa
     if (typeof InspNormModule !== 'undefined' && InspNormModule.salvar) {
       await InspNormModule.salvar();
     }
+
+    // Salvar Inspeção Petrobras
+if (typeof InspPetrModule !== 'undefined' && InspPetrModule.salvar) {
+  await InspPetrModule.salvar();
+}
 
     const response = await fetch(`/api/passagens/${psId}/`, {
       method: 'PUT',

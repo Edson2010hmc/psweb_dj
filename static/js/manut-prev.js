@@ -161,7 +161,7 @@ const ManutPrevModule = (() => {
         };
         mostrarLinkDownload();
       }
-
+      elementos.rade.value = '';
     } catch (error) {
       throw error;
     }

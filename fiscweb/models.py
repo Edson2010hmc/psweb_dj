@@ -42,7 +42,7 @@ def caminho_PS(instance, filename):
         
         nome_original, extensao = os.path.splitext(filename)
         data_formatada = data_emissao.strftime('%d-%m-%Y')
-        nome_arquivo = f"{num_ps} - {data_formatada} - {nome_original}{extensao}"
+        nome_arquivo = f"PS_{num_ps}_{ano}_{barco}_{nome_original}{extensao}"
         
         return f"storage/PS/{barco}/{ano}/{folder}/{nome_arquivo}"
  
@@ -192,7 +192,7 @@ class PortoManutPrev(models.Model):
     Franquia = models.IntegerField(verbose_name='Franquia solicitada')
     SaldoFranquia = models.IntegerField(verbose_name='Saldo de Franquia')
     OrdSerManutPrev = models.CharField(max_length=12, verbose_name='Ordem de Serviço')
-    Rade = models.FileField(upload_to=caminho_PS,verbose_name='Anexo Rade')
+    Rade = models.FileField(upload_to=caminho_PS, verbose_name='Anexo Rade', blank=True, null=True)
     ObservManPrev = models.TextField(max_length=500, verbose_name='Observações', blank=True)
     
     class Meta:
@@ -210,17 +210,15 @@ class PortoAbast(models.Model):
     PASTA_UPLOAD = 'Abast'
 
     idxPortoAB = models.ForeignKey(PassServ, on_delete=models.CASCADE)
-
     prevAbast = models.BooleanField(default=False, verbose_name='Abastecimento previsto?')
-
-    OrdSerAbast = models.CharField(max_length=12, verbose_name='Ordem de Serviço')
-    DataHoraPrevAbast = models.DateTimeField(verbose_name='Data e Hora Prevista')
-    QuantAbast = models.IntegerField(verbose_name='Quantidade (m³)')
-    DuracPrev = models.IntegerField(verbose_name='Duração Prevista(h)')
-    UltAbast = models.DateField(verbose_name='Último Abastecimento')
-    QuantUltAbast = models.IntegerField(verbose_name='Quantidade Ultimo Abastecimento (m³)')
-    Anexos = models.FileField(upload_to=caminho_PS,verbose_name='Anexos')
-    ObservManPrev = models.TextField(max_length=500, verbose_name='Observações', blank=True)
+    OrdSerAbast = models.CharField(max_length=12, verbose_name='Ordem de Serviço', blank=True)
+    DataHoraPrevAbast = models.DateTimeField(verbose_name='Data e Hora Prevista', blank=True, null=True)
+    QuantAbast = models.IntegerField(verbose_name='Quantidade (m³)', blank=True, null=True)
+    DuracPrev = models.IntegerField(verbose_name='Duração Prevista(h)', blank=True, null=True)
+    UltAbast = models.DateField(verbose_name='Último Abastecimento', blank=True, null=True)
+    QuantUltAbast = models.IntegerField(verbose_name='Quantidade Ultimo Abastecimento (m³)', blank=True, null=True)
+    Anexos = models.FileField(upload_to=caminho_PS, verbose_name='Anexos', blank=True, null=True)
+    ObservAbast = models.TextField(max_length=500, verbose_name='Observações', blank=True)
     
     class Meta:
         verbose_name = 'Abastecimento - Porto'
