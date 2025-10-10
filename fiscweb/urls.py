@@ -30,6 +30,7 @@ urlpatterns = [
     # API Passagem de Serviço
     path('api/verificar-rascunho/', views.verificar_rascunho, name='verificar_rascunho'),
     path('api/verificar-rascunho-embarcacao/', views.verificar_rascunho_embarcacao, name='verificar_rascunho_embarcacao'),
+    path('api/verificar-ps-anterior/', views.verificar_ps_anterior, name='verificar_ps_anterior'),
     path('api/passagens/criar/', views.criar_nova_ps, name='criar_nova_ps'),
     path('api/passagens/<int:ps_id>/', views.passagem_detail, name='passagem_detail'),
     path('api/passagens/', views.passagem_list, name='passagens_list'),

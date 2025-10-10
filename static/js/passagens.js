@@ -62,107 +62,129 @@ const PassagensModule = (() => {
   }
 
   // ===== CRIAR NOVA PS ===================================================================
-  async function criarNovaPS(barcoId, barcoData) {
-    const usuario = AuthModule.getUsuarioLogado();
-    if (!usuario) {
-      alert('Usuário não identificado');
+async function criarNovaPS(barcoId, barcoData) {
+  const usuario = AuthModule.getUsuarioLogado();
+  if (!usuario) {
+    alert('Usuário não identificado');
+    return;
+  }
+
+  try {
+    // 1. Verificar rascunho para embarcação
+    const checkResponse = await fetch('/api/verificar-rascunho-embarcacao/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ 
+        barcoId,
+        fiscalNome: `${usuario.chave} - ${usuario.nome}`
+      })
+    });
+
+    const checkResult = await checkResponse.json();
+
+    if (!checkResult.success) {
+      throw new Error(checkResult.error);
+    }
+
+    if (checkResult.existeRascunho) {
+      alert(`Existe uma Passagem de Serviço em modo Rascunho para o barco ${checkResult.barcoNome} gerada pelo usuário ${checkResult.fiscalNome}`);
+      document.getElementById('modalNovaPS').classList.add('hidden');
+      document.querySelectorAll('.tablink').forEach(btn => btn.disabled = false);
       return;
     }
 
-    // Verificar rascunho para embarcação
-    try {
-      const checkResponse = await fetch('/api/verificar-rascunho-embarcacao/', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          barcoId,
-          fiscalNome: `${usuario.chave} - ${usuario.nome}`
-        })
-      });
+    // 2. Verificar se existe PS anterior
+    const anteriorResponse = await fetch('/api/verificar-ps-anterior/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ barcoId })
+    });
 
-      const checkResult = await checkResponse.json();
+    const anteriorResult = await anteriorResponse.json();
 
-      if (!checkResult.success) {
-        throw new Error(checkResult.error);
-      }
-
-      if (checkResult.existeRascunho) {
-        alert(`Existe uma Passagem de Serviço em modo Rascunho para o barco ${checkResult.barcoNome} gerada pelo usuário ${checkResult.fiscalNome}`);
-        document.getElementById('modalNovaPS').classList.add('hidden');
-        document.querySelectorAll('.tablink').forEach(btn => btn.disabled = false);
-        return;
-      }
-
-      //  Calcular período
-      const periodo = calcularPeriodoPS(barcoData.dataPrimPorto);
-
-      // Criar PS no backend
-      const createResponse = await fetch('/api/passagens/criar/', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          barcoId: barcoId,
-          fiscalDesNome: `${usuario.chave} - ${usuario.nome}`,
-          fiscalEmbId: null, // Será preenchido depois
-          numero: periodo.numero,
-          ano: periodo.ano,
-          dataInicio: periodo.inicio,
-          dataFim: periodo.fim,
-          dataEmissao: periodo.emissao
-        })
-      });
-
-      const createResult = await createResponse.json();
-
-      if (!createResult.success) {
-        throw new Error(createResult.error);
-      }
-      // Limpar formulários dos módulos antes de criar nova
-      if (typeof TrocaTurmaModule !== 'undefined' && TrocaTurmaModule.limpar) {
-        TrocaTurmaModule.limpar();
-      }
-
-      if (typeof ManutPrevModule !== 'undefined' && ManutPrevModule.limpar) {
-        ManutPrevModule.limpar();
-      }
-
-      if (typeof AbastModule !== 'undefined' && AbastModule.limpar) {
-        AbastModule.limpar();
-      }
-
-      if (typeof InspNormModule !== 'undefined' && InspNormModule.limpar) {
-        InspNormModule.limpar();
-      }
-
-      if (typeof InspPetrModule !== 'undefined' && InspPetrModule.limpar) {
-        InspPetrModule.limpar();
-      }
-
-      if (typeof EmbEquipModule !== 'undefined' && EmbEquipModule.limpar) {
-        EmbEquipModule.limpar();
-      }
-
-      // Fechar modal e  guardar ID da PS atual
-      psAtualId = createResult.data.id;
-      document.getElementById('modalNovaPS').classList.add('hidden');
-        document.querySelectorAll('.tablink').forEach(btn => btn.disabled = false);
-      document.getElementById('selEmbNova').value = '';
-
-      //  Preencher formulário da PS
-      preencherFormularioPS(createResult.data, barcoData, usuario);
-
-      // Criar card na lista
-      criarCardPS(createResult.data);
-
-      
-      //  Ir para tela da PS
-      document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
-      document.getElementById('tab-passagem').classList.add('active');
-
-    } catch (error) {
-      alert('Erro ao criar PS: ' + error.message);
+    if (!anteriorResult.success) {
+      throw new Error(anteriorResult.error);
     }
+
+    let periodo;
+
+    if (anteriorResult.existeAnterior) {
+      // Usar dados da PS anterior
+      periodo = {
+        numero: anteriorResult.proximoNumero,
+        ano: anteriorResult.proximoAno,
+        inicio: anteriorResult.proximoInicio,
+        fim: anteriorResult.proximoFim,
+        emissao: anteriorResult.proximaEmissao,
+        numeroFormatado: `${anteriorResult.proximoNumero.toString().padStart(2, '0')}/${anteriorResult.proximoAno}`
+      };
+    } else {
+      // Primeira PS - usar algoritmo
+      periodo = calcularPeriodoPS(barcoData.dataPrimPorto);
+    }
+
+    // 3. Criar PS no backend
+    const createResponse = await fetch('/api/passagens/criar/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        barcoId: barcoId,
+        fiscalDesNome: `${usuario.chave} - ${usuario.nome}`,
+        fiscalEmbId: null,
+        numero: periodo.numero,
+        ano: periodo.ano,
+        dataInicio: periodo.inicio,
+        dataFim: periodo.fim,
+        dataEmissao: periodo.emissao
+      })
+    });
+
+    const createResult = await createResponse.json();
+
+    if (!createResult.success) {
+      throw new Error(createResult.error);
+    }
+
+    // 4. Limpar módulos
+    if (typeof TrocaTurmaModule !== 'undefined' && TrocaTurmaModule.limpar) {
+      TrocaTurmaModule.limpar();
+    }
+    if (typeof ManutPrevModule !== 'undefined' && ManutPrevModule.limpar) {
+      ManutPrevModule.limpar();
+    }
+    if (typeof AbastModule !== 'undefined' && AbastModule.limpar) {
+      AbastModule.limpar();
+    }
+    if (typeof InspNormModule !== 'undefined' && InspNormModule.limpar) {
+      InspNormModule.limpar();
+    }
+    if (typeof InspPetrModule !== 'undefined' && InspPetrModule.limpar) {
+      InspPetrModule.limpar();
+    }
+    if (typeof EmbEquipModule !== 'undefined' && EmbEquipModule.limpar) {
+      EmbEquipModule.limpar();
+    }
+
+    // 5. Fechar modal e guardar ID
+    psAtualId = createResult.data.id;
+    document.getElementById('modalNovaPS').classList.add('hidden');
+    document.querySelectorAll('.tablink').forEach(btn => btn.disabled = false);
+    document.getElementById('selEmbNova').value = '';
+
+    // 6. Preencher formulário
+    preencherFormularioPS(createResult.data, barcoData, usuario);
+
+    // 7. Criar card
+    criarCardPS(createResult.data);
+
+    // 8. Ir para tela da PS
+    document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+    document.getElementById('tab-passagem').classList.add('active');
+
+  } catch (error) {
+    alert('Erro ao criar PS: ' + error.message);
   }
+}
 
 // ===== PREENCHER FORMULÁRIO DA PS =======================================================
 function preencherFormularioPS(psData, barcoData, usuario) {
@@ -514,7 +536,7 @@ async function carregarPassagensUsuario() {
 }
 
 function desabilitarInterface() {
-  console.log('[FINALIZAR] Desabilitando interface completa');
+  
   
   // Desabilitar campos do cabeçalho
   document.getElementById('fData').disabled = true;
@@ -551,8 +573,49 @@ function desabilitarInterface() {
   document.getElementById('btnFinalizar').disabled = true;
   document.getElementById('btnExcluirRasc').disabled = true;
   
-  console.log('[FINALIZAR] Interface desabilitada com sucesso');
+  
 }
+
+function habilitarInterface() {
+  // Habilitar campos do cabeçalho (exceto os que devem permanecer desabilitados)
+  document.getElementById('fData').disabled = false;
+  document.getElementById('fInicioPS').disabled = false;
+  document.getElementById('fFimPS').disabled = false;
+  document.getElementById('fEmbC').disabled = false;
+  
+  // Habilitar todos os inputs, selects e textareas das seções Porto
+  document.querySelectorAll('#sub-porto input, #sub-porto select, #sub-porto textarea').forEach(el => {
+    el.disabled = false;
+  });
+  
+  // Habilitar todos os botões das seções Porto
+  document.querySelectorAll('#sub-porto button').forEach(btn => {
+    btn.disabled = false;
+  });
+  
+  // Habilitar checkboxes
+  document.querySelectorAll('#sub-porto input[type="checkbox"]').forEach(cb => {
+    cb.disabled = false;
+  });
+  
+  // Habilitar inputs de arquivo
+  document.querySelectorAll('#sub-porto input[type="file"]').forEach(file => {
+    file.disabled = false;
+  });
+  
+  // Habilitar botões principais
+  document.getElementById('btnSalvar').disabled = false;
+  document.getElementById('btnFinalizar').disabled = false;
+  document.getElementById('btnExcluirRasc').disabled = false;
+  
+  // Remover link do PDF se existir
+  const linkPDF = document.getElementById('linkPDFFinalizado');
+  if (linkPDF) {
+    linkPDF.remove();
+  }
+}
+
+
 
 // ===== EXIBIR LINK DO PDF =====
 function exibirLinkPDF(pdfPath) {
@@ -593,23 +656,32 @@ async function finalizarPS() {
   try {
     // Obter dados da PS atual
     const numPS = document.getElementById('fNumero').value;
+    const dataEmissaoPS = document.getElementById('fData').value;
     
-    console.log(`[FINALIZAR] Iniciando finalização da PS ${numPS}`);
+    // VALIDAÇÃO: Verificar se data atual >= data emissão
+    const hoje = new Date();
+    hoje.setHours(0, 0, 0, 0);
+    
+    const dataEmissao = new Date(dataEmissaoPS);
+    dataEmissao.setHours(0, 0, 0, 0);
+    
+    if (hoje < dataEmissao) {
+      const dataFormatada = dataEmissao.toLocaleDateString('pt-BR');
+      alert(`Não é possível finalizar a PS ${numPS}antes da data de emissão prevista.`);
+      return;
+    }
     
     // 1. Salvar rascunho silenciosamente antes de finalizar
-    console.log('[FINALIZAR] Salvando rascunho...');
     await salvarRascunho(psAtualId, true);
     
     // 2. Exibir confirmação
     const confirmar = confirm(`Tem certeza que deseja finalizar a PS ${numPS}? Essa ação é irreversível!`);
     
     if (!confirmar) {
-      console.log('[FINALIZAR] Finalização cancelada pelo usuário');
       return;
     }
     
     // 3. Chamar endpoint de finalização
-    console.log('[FINALIZAR] Finalizando PS no backend...');
     const responseFinalizar = await fetch(`/api/passagens/${psAtualId}/finalizar/`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' }
@@ -621,8 +693,6 @@ async function finalizarPS() {
       throw new Error(resultFinalizar.error);
     }
     
-    console.log('[FINALIZAR] PS finalizada no backend');
-    
     // 4. Atualizar status no formulário
     document.getElementById('fStatus').value = 'FINALIZADA';
     
@@ -630,7 +700,6 @@ async function finalizarPS() {
     desabilitarInterface();
     
     // 6. Gerar PDF
-    console.log('[FINALIZAR] Gerando PDF...');
     const responsePDF = await fetch(`/api/passagens/${psAtualId}/gerar-pdf/`);
     
     const resultPDF = await responsePDF.json();
@@ -638,8 +707,6 @@ async function finalizarPS() {
     if (!resultPDF.success) {
       throw new Error('Erro ao gerar PDF: ' + resultPDF.error);
     }
-    
-    console.log('[FINALIZAR] PDF gerado:', resultPDF.pdfPath);
     
     // 7. Exibir link do PDF
     exibirLinkPDF(resultPDF.pdfPath);
@@ -657,26 +724,23 @@ async function finalizarPS() {
     alert(`PS ${numPS} finalizada com sucesso! O PDF foi gerado e está disponível para download.`);
     
   } catch (error) {
-    console.error('[FINALIZAR ERROR]', error);
     alert('Erro ao finalizar PS: ' + error.message);
   }
 }
 
 // ===== VERIFICAR SE PS É FINALIZADA AO CARREGAR =====
 function verificarPSFinalizada(psData) {
-  if (psData.statusPS === 'FINALIZADA') {
-    console.log('[FINALIZAR] PS já está finalizada, desabilitando interface');
-    
-    // Desabilitar interface após pequeno delay para garantir que tudo foi carregado
-    setTimeout(() => {
+  setTimeout(() => {
+    if (psData.statusPS === 'FINALIZADA') {
       desabilitarInterface();
       
-      // Exibir link do PDF se existir
       if (psData.pdfPath) {
         exibirLinkPDF(psData.pdfPath);
       }
-    }, 100);
-  }
+    } else {
+      habilitarInterface();
+    }
+  }, 100);
 }
 
 // ===== CONFIGURAR BOTÃO FINALIZAR ==========================================================

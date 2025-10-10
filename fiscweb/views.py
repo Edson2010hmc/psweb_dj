@@ -872,6 +872,86 @@ def criar_nova_ps(request):
             'error': str(e)
         }, status=400)
 
+#================================================PASSAGEM DE SERVIÇO - API REST - VERIFICA PS ANTERIOR=================================================
+@csrf_exempt
+@require_http_methods(["POST"])
+def verificar_ps_anterior(request):
+    """
+    Verifica se existe PS anterior para a embarcação e calcula dados da próxima PS
+    """
+    try:
+        data = json.loads(request.body)
+        barco_id = data.get('barcoId')
+        
+        if not barco_id:
+            return JsonResponse({
+                'success': False,
+                'error': 'ID da embarcação não fornecido'
+            }, status=400)
+        
+        # Buscar embarcação
+        try:
+            barco = BarcosCad.objects.get(id=barco_id)
+        except BarcosCad.DoesNotExist:
+            return JsonResponse({
+                'success': False,
+                'error': 'Embarcação não encontrada'
+            }, status=404)
+        
+        barco_nome = f"{barco.tipoBarco} - {barco.nomeBarco}"
+        
+        # Buscar última PS da embarcação (por data de emissão)
+        ps_anterior = PassServ.objects.filter(
+            BarcoPS=barco_nome
+        ).order_by('-dataEmissaoPS').first()
+        
+        if not ps_anterior:
+            # Não existe PS anterior - frontend usará algoritmo
+            return JsonResponse({
+                'success': True,
+                'existeAnterior': False
+            })
+        
+        # Existe PS anterior - calcular próxima PS
+        from datetime import timedelta
+        
+        # Início = emissão da anterior
+        proximo_inicio = ps_anterior.dataEmissaoPS
+        
+        # Fim = início + 13 dias
+        proximo_fim = proximo_inicio + timedelta(days=13)
+        
+        # Emissão = fim + 1 dia
+        proxima_emissao = proximo_fim + timedelta(days=1)
+        
+        # Calcular numeração
+        ano_emissao = proxima_emissao.year
+        ano_anterior = ps_anterior.dataEmissaoPS.year
+        
+        if ano_emissao == ano_anterior:
+            # Mesmo ano - incrementa número
+            proximo_numero = ps_anterior.numPS + 1
+        else:
+            # Mudou ano - reinicia em 1
+            proximo_numero = 1
+        
+        return JsonResponse({
+            'success': True,
+            'existeAnterior': True,
+            'proximoNumero': proximo_numero,
+            'proximoAno': ano_emissao,
+            'proximoInicio': proximo_inicio.isoformat().split('T')[0],
+            'proximoFim': proximo_fim.isoformat().split('T')[0],
+            'proximaEmissao': proxima_emissao.isoformat().split('T')[0]
+        })
+        
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=500)
+
+
 #================================================PASSAGEM DE SERVIÇO - API REST - DETALHES PS=================================================
 
     """
@@ -2220,7 +2300,6 @@ def subtab_insp_petr_detail(request, item_id):
             }, status=400)
 
 
-
 #================================================EMBARQUE DE EQUIPES - API REST=================================================
 @csrf_exempt
 @require_http_methods(["GET", "POST"])
@@ -2515,10 +2594,6 @@ def subtab_emb_equip_detail(request, item_id):
 
 
 
-
-
-
-
 #================================================FINALIZAR PASSAGEM DE SERVIÇO=================================================
 @csrf_exempt
 @require_http_methods(["PUT"])
@@ -2538,9 +2613,18 @@ def finalizar_passagem(request, ps_id):
         }, status=404)
     
     try:
+        # VALIDAÇÃO: Verificar se data atual >= data emissão
+        from datetime import date
+        hoje = date.today()
+        
+        if hoje < ps.dataEmissaoPS:
+            return JsonResponse({
+                'success': False,
+                'error': f'Não é possível finalizar a PS antes da data de emissão ({ps.dataEmissaoPS.strftime("%d/%m/%Y")})'
+            }, status=400)
+        
         # Verificar se já está finalizada
         if ps.statusPS == 'FINALIZADA':
-            print(f"[API ERROR] PS {ps_id} já está finalizada")
             return JsonResponse({
                 'success': False,
                 'error': 'Esta PS já está finalizada'
@@ -2548,19 +2632,14 @@ def finalizar_passagem(request, ps_id):
         
         # Verificar se está em RASCUNHO
         if ps.statusPS != 'RASCUNHO':
-            print(f"[API ERROR] PS {ps_id} não está em status RASCUNHO")
             return JsonResponse({
                 'success': False,
                 'error': 'Apenas PS em RASCUNHO podem ser finalizadas'
             }, status=400)
         
-        print(f"[API] Finalizando PS {ps.numPS}/{ps.anoPS} - ID: {ps_id}")
-        
         # Alterar status para FINALIZADA
         ps.statusPS = 'FINALIZADA'
         ps.save()
-        
-        print(f"[API] PS {ps.numPS}/{ps.anoPS} finalizada com sucesso")
         
         return JsonResponse({
             'success': True,
