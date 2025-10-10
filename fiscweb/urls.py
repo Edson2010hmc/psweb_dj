@@ -5,10 +5,13 @@ urlpatterns = [
     # API Index
     path('', views.index, name='index'),
 
+    #========================================AUTENTICAÇÃO E AUTORIZAÇÃO=================================
     # API Validação de Usuário
     path('api/validar-usuario/', views.validar_usuario, name='validar_usuario'),
     path('api/get-current-user/', views.get_current_user, name='get_current_user'),
 
+
+    #===========================================CADASTROS========================================
     # API Usuarios
     path('api/fiscais/', views.fiscais_list, name='fiscais_list'), #filtro por perfil
     path('api/fiscais/<int:fiscal_id>/', views.fiscais_detail, name='fiscais_detail'),
@@ -22,11 +25,14 @@ urlpatterns = [
     # API Modais
     path('api/modais/', views.modais_list, name='modais_list'),
 
+
+    #===========================================PASSAGEM DE SERVIÇO=================================
     # API Passagem de Serviço
     path('api/verificar-rascunho/', views.verificar_rascunho, name='verificar_rascunho'),
     path('api/verificar-rascunho-embarcacao/', views.verificar_rascunho_embarcacao, name='verificar_rascunho_embarcacao'),
     path('api/passagens/criar/', views.criar_nova_ps, name='criar_nova_ps'),
     path('api/passagens/<int:ps_id>/', views.passagem_detail, name='passagem_detail'),
+    path('api/passagens/', views.passagem_list, name='passagens_list'),
     path('api/passagens/usuario/', views.listar_passagens_usuario, name='listar_passagens_usuario'),
 
     # API Troca de Turma
@@ -60,6 +66,9 @@ urlpatterns = [
     path('api/emb-equip/<int:emb_equip_id>/subtab/', views.subtab_emb_equip_list, name='subtab_emb_equip_list'),
     path('api/emb-equip-item/<int:item_id>/', views.subtab_emb_equip_detail, name='subtab_emb_equip_detail'),
 
+# API Finalizar Passagem de Serviço
+    path('api/passagens/<int:ps_id>/finalizar/', views.finalizar_passagem, name='finalizar_passagem'),   
 
-
+# API Gerar PDF da Passagem de Serviço
+    path('api/passagens/<int:ps_id>/gerar-pdf/', views.gerar_pdf_passagem, name='gerar_pdf_passagem'),
 ]

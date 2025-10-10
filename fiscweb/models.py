@@ -146,7 +146,7 @@ class PassServ(models.Model):
     statusPS = models.CharField(max_length=12,choices=STATUS_CHOICES,default='RASCUNHO',verbose_name='Status da PS')
     fiscalEmb = models.CharField(max_length=30,verbose_name='Fiscal Embarcando')
     fiscalDes = models.CharField(max_length=30,verbose_name='Fiscal Desembarcando')
-    
+    pdfPath = models.CharField(max_length=500, verbose_name='Caminho do PDF', blank=True, null=True)
      
     criado_em = models.DateTimeField(auto_now_add=True)
     atualizado_em = models.DateTimeField(auto_now=True)

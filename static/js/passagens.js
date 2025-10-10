@@ -2,6 +2,7 @@
 
 const PassagensModule = (() => {
  let psAtualId = null;
+ let pdfLinkGerado = null;
 
   // ===== CALCULAR PERÍODO DA PS ==========================================================
   function calcularPeriodoPS(dataPrimeiraEntrada) {
@@ -203,6 +204,11 @@ function preencherFormularioPS(psData, barcoData, usuario) {
     window.btnSalvarConfigurado = true;
 }
 
+if (!window.btnFinalizarConfigurado) {
+  configurarBotaoFinalizar();
+  window.btnFinalizarConfigurado = true;
+}
+
 // Carregar modulo Troca de Turma
 if (typeof TrocaTurmaModule !== 'undefined' && TrocaTurmaModule.carregarDados) {
   TrocaTurmaModule.carregarDados(psData.id);
@@ -231,7 +237,8 @@ if (typeof InspNormModule !== 'undefined' && InspNormModule.carregarDados) {
 if (typeof InspPetrModule !== 'undefined' && InspPetrModule.carregarDados) {
   InspPetrModule.carregarDados(psData.id);
 }
-
+// Verificar se PS está finalizada
+verificarPSFinalizada(psData);
 
 }
 
@@ -506,12 +513,207 @@ async function carregarPassagensUsuario() {
   }
 }
 
+function desabilitarInterface() {
+  console.log('[FINALIZAR] Desabilitando interface completa');
+  
+  // Desabilitar campos do cabeçalho
+  document.getElementById('fData').disabled = true;
+  document.getElementById('fInicioPS').disabled = true;
+  document.getElementById('fFimPS').disabled = true;
+  document.getElementById('fEmbC').disabled = true;
+  
+  // Desabilitar todos os inputs, selects e textareas das seções
+  document.querySelectorAll('#sub-porto input, #sub-porto select, #sub-porto textarea, #sub-porto button').forEach(el => {
+    if (!el.classList.contains('btn')) {
+      el.disabled = true;
+    }
+  });
+  
+  // Desabilitar botões de adicionar/remover das tabelas
+  document.querySelectorAll('#sub-porto button').forEach(btn => {
+    if (btn.textContent.includes('Adicionar') || btn.textContent.includes('Remover')) {
+      btn.disabled = true;
+    }
+  });
+  
+  // Desabilitar checkboxes "Não previsto"
+  document.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+    cb.disabled = true;
+  });
+  
+  // Desabilitar inputs de arquivo
+  document.querySelectorAll('input[type="file"]').forEach(file => {
+    file.disabled = true;
+  });
+  
+  // Desabilitar botões principais
+  document.getElementById('btnSalvar').disabled = true;
+  document.getElementById('btnFinalizar').disabled = true;
+  document.getElementById('btnExcluirRasc').disabled = true;
+  
+  console.log('[FINALIZAR] Interface desabilitada com sucesso');
+}
+
+// ===== EXIBIR LINK DO PDF =====
+function exibirLinkPDF(pdfPath) {
+  console.log('[FINALIZAR] Exibindo link do PDF:', pdfPath);
+  
+  const btnFinalizar = document.getElementById('btnFinalizar');
+  const btnsContainer = btnFinalizar.parentElement;
+  
+  // Remover link antigo se existir
+  const linkAntigo = document.getElementById('linkPDFFinalizado');
+  if (linkAntigo) {
+    linkAntigo.remove();
+  }
+  
+  // Extrair nome do arquivo do caminho
+  const nomeArquivo = pdfPath.split('/').pop();
+  
+  // Criar novo link
+  const linkPDF = document.createElement('a');
+  linkPDF.id = 'linkPDFFinalizado';
+  linkPDF.href = `/storage/${pdfPath}`;
+  linkPDF.target = '_blank';
+  linkPDF.style.cssText = 'color:#0b7a66; text-decoration:underline; margin-left:16px; font-weight:bold;';
+  linkPDF.textContent = `📄 ${nomeArquivo}`;
+  
+  btnsContainer.appendChild(linkPDF);
+  
+  console.log('[FINALIZAR] Link do PDF exibido com sucesso');
+}
+
+// ===== FINALIZAR PASSAGEM DE SERVIÇO =====
+async function finalizarPS() {
+  if (!psAtualId) {
+    alert('Nenhuma PS carregada');
+    return;
+  }
+  
+  try {
+    // Obter dados da PS atual
+    const numPS = document.getElementById('fNumero').value;
+    
+    console.log(`[FINALIZAR] Iniciando finalização da PS ${numPS}`);
+    
+    // 1. Salvar rascunho silenciosamente antes de finalizar
+    console.log('[FINALIZAR] Salvando rascunho...');
+    await salvarRascunho(psAtualId, true);
+    
+    // 2. Exibir confirmação
+    const confirmar = confirm(`Tem certeza que deseja finalizar a PS ${numPS}? Essa ação é irreversível!`);
+    
+    if (!confirmar) {
+      console.log('[FINALIZAR] Finalização cancelada pelo usuário');
+      return;
+    }
+    
+    // 3. Chamar endpoint de finalização
+    console.log('[FINALIZAR] Finalizando PS no backend...');
+    const responseFinalizar = await fetch(`/api/passagens/${psAtualId}/finalizar/`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' }
+    });
+    
+    const resultFinalizar = await responseFinalizar.json();
+    
+    if (!resultFinalizar.success) {
+      throw new Error(resultFinalizar.error);
+    }
+    
+    console.log('[FINALIZAR] PS finalizada no backend');
+    
+    // 4. Atualizar status no formulário
+    document.getElementById('fStatus').value = 'FINALIZADA';
+    
+    // 5. Desabilitar toda a interface
+    desabilitarInterface();
+    
+    // 6. Gerar PDF
+    console.log('[FINALIZAR] Gerando PDF...');
+    const responsePDF = await fetch(`/api/passagens/${psAtualId}/gerar-pdf/`);
+    
+    const resultPDF = await responsePDF.json();
+    
+    if (!resultPDF.success) {
+      throw new Error('Erro ao gerar PDF: ' + resultPDF.error);
+    }
+    
+    console.log('[FINALIZAR] PDF gerado:', resultPDF.pdfPath);
+    
+    // 7. Exibir link do PDF
+    exibirLinkPDF(resultPDF.pdfPath);
+    
+    // 8. Atualizar card na lista
+    const card = document.querySelector(`li[data-ps-id="${psAtualId}"]`);
+    if (card) {
+      const statusElement = card.querySelector('.ps-linha3');
+      if (statusElement) {
+        statusElement.textContent = 'FINALIZADA';
+        statusElement.className = 'ps-linha3 status-FINALIZADA';
+      }
+    }
+    
+    alert(`PS ${numPS} finalizada com sucesso! O PDF foi gerado e está disponível para download.`);
+    
+  } catch (error) {
+    console.error('[FINALIZAR ERROR]', error);
+    alert('Erro ao finalizar PS: ' + error.message);
+  }
+}
+
+// ===== VERIFICAR SE PS É FINALIZADA AO CARREGAR =====
+function verificarPSFinalizada(psData) {
+  if (psData.statusPS === 'FINALIZADA') {
+    console.log('[FINALIZAR] PS já está finalizada, desabilitando interface');
+    
+    // Desabilitar interface após pequeno delay para garantir que tudo foi carregado
+    setTimeout(() => {
+      desabilitarInterface();
+      
+      // Exibir link do PDF se existir
+      if (psData.pdfPath) {
+        exibirLinkPDF(psData.pdfPath);
+      }
+    }, 100);
+  }
+}
+
+// ===== CONFIGURAR BOTÃO FINALIZAR ==========================================================
+function configurarBotaoFinalizar() {
+  const btnFinalizar = document.getElementById('btnFinalizar');
+  
+  btnFinalizar.addEventListener('click', function() {
+    if (psAtualId) {
+      finalizarPS();
+    } else {
+      alert('Nenhuma PS carregada');
+    }
+  });
+}
+// Formatar texto exibido no select admin_ps_hint =====
+function textoPSExibicao(ps) {
+  // Garante numPS com 2 dígitos
+  const num = (ps.numPS !== undefined && ps.numPS !== null) ? ps.numPS.toString().padStart(2, '0') : '??';
+  const ano = ps.anoPS || '????';
+  const tipo = ps.TipoBarco || '';
+  const barco = ps.BarcoPS || '';
+  return `${num}/${ano} - ${tipo} ${barco}`.trim();
+}
+
+
+
+
+
+
+
   // ===== EXPORTAR FUNÇÕES ================================================================
   return {
     criarNovaPS,
     carregarPassagensUsuario,
     salvarRascunho,
-    salvarAntesDeSair
+    salvarAntesDeSair,
+    finalizarPS
   };
 
 })();

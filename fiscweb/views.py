@@ -1,4 +1,13 @@
+import os
+from reportlab.lib.pagesizes import A4
+from reportlab.lib import colors
+from reportlab.lib.units import mm
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, Image
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.enums import TA_CENTER, TA_LEFT
+from django.conf import settings
 from django.shortcuts import render
+from django.utils.dateparse import parse_date, parse_datetime
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
@@ -623,6 +632,116 @@ def verificar_rascunho_embarcacao(request):
 
 #================================================PASSAGEM DE SERVIÇO - API REST - DETALHES PS=================================================
 @csrf_exempt
+@require_http_methods(["GET", "POST"])
+def passagem_list(request):
+    """
+    GET: Lista todas as passagens (PassServ)
+    POST: Cria uma nova passagem (PassServ)
+    """
+    if request.method == 'GET':
+        try:
+            passagens = PassServ.objects.all().values(
+                'id', 'numPS', 'anoPS', 'dataInicio', 'dataFim',
+                'dataEmissaoPS', 'TipoBarco', 'BarcoPS', 'statusPS',
+                'fiscalEmb', 'fiscalDes', 'pdfPath'
+            )
+            passagens_list = []
+            for p in passagens:
+                # Garantir que campos de data venham como string JSON-serializável
+                p['dataInicio'] = str(p['dataInicio']) if p.get('dataInicio') is not None else None
+                p['dataFim'] = str(p['dataFim']) if p.get('dataFim') is not None else None
+                p['dataEmissaoPS'] = str(p['dataEmissaoPS']) if p.get('dataEmissaoPS') is not None else None
+                passagens_list.append(p)
+
+            print(f"[API] GET /passagens - Retornando {len(passagens_list)} passagens")
+
+            return JsonResponse({
+                'success': True,
+                'data': passagens_list,
+                'count': len(passagens_list)
+            }, safe=False)
+
+        except Exception as e:
+            print(f"[API ERROR] GET /passagens - {str(e)}")
+            return JsonResponse({
+                'success': False,
+                'error': str(e)
+            }, status=500)
+
+    elif request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+
+            print(f"[API] POST /passagens - Criando passagem: numPS={data.get('numPS')} anoPS={data.get('anoPS')}")
+
+            # Preparar dados (tentativa de parse de datas; aceita None se falhar)
+            data_emissao = None
+            dt_inicio = None
+            dt_fim = None
+
+            # Tenta parsear como date ou datetime (aceita ISO strings)
+            if data.get('dataEmissaoPS'):
+                data_emissao = parse_date(data.get('dataEmissaoPS')) or parse_datetime(data.get('dataEmissaoPS')) or data.get('dataEmissaoPS')
+            if data.get('dataInicio'):
+                dt_inicio = parse_date(data.get('dataInicio')) or parse_datetime(data.get('dataInicio')) or data.get('dataInicio')
+            if data.get('dataFim'):
+                dt_fim = parse_date(data.get('dataFim')) or parse_datetime(data.get('dataFim')) or data.get('dataFim')
+
+            # Monta o objeto PassServ. Ajuste os nomes dos campos caso seu modelo seja diferente.
+            passagem = PassServ.objects.create(
+                numPS=data.get('numPS'),
+                anoPS=data.get('anoPS'),
+                dataInicio=dt_inicio,
+                dataFim=dt_fim,
+                dataEmissaoPS=data_emissao,
+                TipoBarco=data.get('TipoBarco'),
+                BarcoPS=data.get('BarcoPS'),
+                statusPS=data.get('statusPS'),
+                # fiscalEmb e fiscalDes no DB parecem ser strings que guardam "chave - nome"
+                fiscalDes=data.get('fiscalDes', ''),
+                pdfPath=data.get('pdfPath', '')
+            )
+
+            # Se enviaram fiscalEmb como ID, converte para "chave - nome" como no seu detalhe
+            if data.get('fiscalEmb'):
+                try:
+                    fiscal_emb = FiscaisCad.objects.get(id=data.get('fiscalEmb'))
+                    passagem.fiscalEmb = f"{fiscal_emb.chave} - {fiscal_emb.nome}"
+                    passagem.save()
+                except FiscaisCad.DoesNotExist:
+                    # se não existir, armazena o que foi enviado (possivelmente já string)
+                    passagem.fiscalEmb = data.get('fiscalEmb')
+                    passagem.save()
+
+            print(f"[API] POST /passagens - Passagem criada com ID: {passagem.id}")
+
+            return JsonResponse({
+                'success': True,
+                'message': 'Passagem criada com sucesso',
+                'data': {
+                    'id': passagem.id,
+                    'numPS': passagem.numPS,
+                    'anoPS': passagem.anoPS,
+                    'dataInicio': str(passagem.dataInicio) if passagem.dataInicio else None,
+                    'dataFim': str(passagem.dataFim) if passagem.dataFim else None,
+                    'dataEmissaoPS': str(passagem.dataEmissaoPS) if passagem.dataEmissaoPS else None,
+                    'TipoBarco': passagem.TipoBarco,
+                    'BarcoPS': passagem.BarcoPS,
+                    'statusPS': passagem.statusPS,
+                    'fiscalEmb': passagem.fiscalEmb,
+                    'fiscalDes': passagem.fiscalDes,
+                    'pdfPath': passagem.pdfPath
+                }
+            }, status=201)
+
+        except Exception as e:
+            print(f"[API ERROR] POST /passagens - {str(e)}")
+            return JsonResponse({
+                'success': False,
+                'error': str(e)
+            }, status=400)
+
+@csrf_exempt
 @require_http_methods(["GET", "PUT", "DELETE"])
 def passagem_detail(request, ps_id):
     """
@@ -647,7 +766,8 @@ def passagem_detail(request, ps_id):
                     'BarcoPS': ps.BarcoPS,
                     'statusPS': ps.statusPS,
                     'fiscalEmb': ps.fiscalEmb,
-                    'fiscalDes': ps.fiscalDes
+                    'fiscalDes': ps.fiscalDes,
+                    'pdfPath': ps.pdfPath  
                 }
             })
         
@@ -2099,7 +2219,6 @@ def subtab_insp_petr_detail(request, item_id):
                 'error': str(e)
             }, status=400)
 
-# ===== ADICIONAR NO FINAL DO ARQUIVO views.py =====
 
 
 #================================================EMBARQUE DE EQUIPES - API REST=================================================
@@ -2399,6 +2518,457 @@ def subtab_emb_equip_detail(request, item_id):
 
 
 
+
+#================================================FINALIZAR PASSAGEM DE SERVIÇO=================================================
+@csrf_exempt
+@require_http_methods(["PUT"])
+def finalizar_passagem(request, ps_id):
+    """
+    Finaliza uma Passagem de Serviço (altera status de RASCUNHO para FINALIZADA)
+    Esta ação é irreversível
+    """
+    
+    try:
+        ps = PassServ.objects.get(id=ps_id)
+    except PassServ.DoesNotExist:
+        print(f"[API ERROR] PS ID {ps_id} não encontrada")
+        return JsonResponse({
+            'success': False,
+            'error': 'Passagem de Serviço não encontrada'
+        }, status=404)
+    
+    try:
+        # Verificar se já está finalizada
+        if ps.statusPS == 'FINALIZADA':
+            print(f"[API ERROR] PS {ps_id} já está finalizada")
+            return JsonResponse({
+                'success': False,
+                'error': 'Esta PS já está finalizada'
+            }, status=400)
+        
+        # Verificar se está em RASCUNHO
+        if ps.statusPS != 'RASCUNHO':
+            print(f"[API ERROR] PS {ps_id} não está em status RASCUNHO")
+            return JsonResponse({
+                'success': False,
+                'error': 'Apenas PS em RASCUNHO podem ser finalizadas'
+            }, status=400)
+        
+        print(f"[API] Finalizando PS {ps.numPS}/{ps.anoPS} - ID: {ps_id}")
+        
+        # Alterar status para FINALIZADA
+        ps.statusPS = 'FINALIZADA'
+        ps.save()
+        
+        print(f"[API] PS {ps.numPS}/{ps.anoPS} finalizada com sucesso")
+        
+        return JsonResponse({
+            'success': True,
+            'message': f'PS {ps.numPS}/{ps.anoPS} finalizada com sucesso',
+            'data': {
+                'id': ps.id,
+                'numPS': ps.numPS,
+                'anoPS': ps.anoPS,
+                'statusPS': ps.statusPS
+            }
+        })
+        
+    except Exception as e:
+        print(f"[API ERROR] Erro ao finalizar PS {ps_id} - {str(e)}")
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=500)
+
+#================================================GERAR PDF DA PASSAGEM DE SERVIÇO=================================================
+@csrf_exempt
+@require_http_methods(["GET"])
+def gerar_pdf_passagem(request, ps_id):
+    """
+    Gera o PDF da Passagem de Serviço com todos os dados
+    """
+    
+    try:
+        # Buscar PS
+        ps = PassServ.objects.get(id=ps_id)
+    except PassServ.DoesNotExist:
+        print(f"[PDF ERROR] PS ID {ps_id} não encontrada")
+        return JsonResponse({
+            'success': False,
+            'error': 'Passagem de Serviço não encontrada'
+        }, status=404)
+    
+    try:
+        print(f"[PDF] Gerando PDF para PS {ps.numPS}/{ps.anoPS}")
+        
+        # Verificar se PS está finalizada
+        if ps.statusPS != 'FINALIZADA':
+            return JsonResponse({
+                'success': False,
+                'error': 'Apenas PS finalizadas podem gerar PDF'
+            }, status=400)
+        
+        # Buscar dados da embarcação
+        barco = BarcosCad.objects.filter(
+            nomeBarco__icontains=ps.BarcoPS.split(' - ')[-1] if ' - ' in ps.BarcoPS else ps.BarcoPS
+        ).first()
+        
+        if not barco:
+            print(f"[PDF ERROR] Embarcação não encontrada: {ps.BarcoPS}")
+            return JsonResponse({
+                'success': False,
+                'error': 'Embarcação não encontrada no cadastro'
+            }, status=404)
+        
+        # Buscar dados dos fiscais
+        fiscal_emb_dados = None
+        fiscal_des_dados = None
+        
+        if ps.fiscalEmb:
+            chave_emb = ps.fiscalEmb.split(' - ')[0] if ' - ' in ps.fiscalEmb else ''
+            fiscal_emb_dados = FiscaisCad.objects.filter(chave=chave_emb).first()
+        
+        if ps.fiscalDes:
+            chave_des = ps.fiscalDes.split(' - ')[0] if ' - ' in ps.fiscalDes else ''
+            fiscal_des_dados = FiscaisCad.objects.filter(chave=chave_des).first()
+        
+        # Buscar dados das seções
+        troca_turma = PortoTrocaTurma.objects.filter(idxPortoTT=ps).first()
+        manut_prev = PortoManutPrev.objects.filter(idxPortoMP=ps).first()
+        abastecimento = PortoAbast.objects.filter(idxPortoAB=ps).first()
+        insp_norm = PortoInspNorm.objects.filter(idxPortoIN=ps).first()
+        insp_petr = PortoInspPetr.objects.filter(idxPortoIP=ps).first()
+        emb_equip = PortoEmbEquip.objects.filter(idxPortoEE=ps).first()
+        
+        # Buscar itens das subtabelas
+        itens_insp_norm = []
+        if insp_norm:
+            itens_insp_norm = list(subTabPortoInspNorm.objects.filter(
+                idxsubTabPortoInspNorm=insp_norm
+            ).values('DescInspNorm', 'OrdSerInspNorm'))
+        
+        itens_insp_petr = []
+        if insp_petr:
+            itens_insp_petr = list(subTabPortoInspPetr.objects.filter(
+                idxsubTabPortoIP=insp_petr
+            ).values('DescInspPetr', 'auditorPetr', 'gerAuditorPetr'))
+        
+        itens_emb_equip = []
+        if emb_equip:
+            itens_emb_equip = list(subTabPortoEmbEquip.objects.filter(
+                idxSubTabPortoEE=emb_equip
+            ).values('DescEmbEquip', 'equipNome', 'equipFuncao', 'equipEmpre'))
+        
+        # Definir caminho do PDF
+        nome_barco_limpo = ps.BarcoPS.replace('/', '-').replace('\\', '-')
+        pasta_destino = os.path.join(
+            settings.MEDIA_ROOT,
+            'Finalizadas',
+            nome_barco_limpo,
+            str(ps.anoPS)
+        )
+        
+        # Criar diretórios se não existirem
+        os.makedirs(pasta_destino, exist_ok=True)
+        
+        nome_arquivo = f"PS_{str(ps.numPS).zfill(2)}_{nome_barco_limpo}.pdf"
+        caminho_completo = os.path.join(pasta_destino, nome_arquivo)
+        
+        # Caminho relativo para salvar no banco
+        caminho_relativo = os.path.join(
+            'Finalizadas',
+            nome_barco_limpo,
+            str(ps.anoPS),
+            nome_arquivo
+        )
+        
+        print(f"[PDF] Salvando em: {caminho_completo}")
+        
+        # Criar PDF
+        doc = SimpleDocTemplate(caminho_completo, pagesize=A4)
+        elements = []
+        styles = getSampleStyleSheet()
+        
+        # Estilo personalizado para título
+        titulo_style = ParagraphStyle(
+            'TituloCustom',
+            parent=styles['Heading1'],
+            fontSize=18,
+            textColor=colors.HexColor('#0b7a66'),
+            alignment=TA_CENTER,
+            spaceAfter=12
+        )
+        
+        subtitulo_style = ParagraphStyle(
+            'SubtituloCustom',
+            parent=styles['Normal'],
+            fontSize=12,
+            textColor=colors.grey,
+            alignment=TA_CENTER,
+            spaceAfter=20
+        )
+        
+        # Adicionar logo (se existir)
+        logo_path = os.path.join(settings.BASE_DIR, 'static', 'assets', 'logo.png')
+        if os.path.exists(logo_path):
+            logo = Image(logo_path, width=60*mm, height=20*mm)
+            elements.append(logo)
+            elements.append(Spacer(1, 10))
+        
+        # Título
+        elements.append(Paragraph("PASSAGEM DE SERVIÇO", titulo_style))
+        elements.append(Paragraph("Fiscalização - Embarcações", subtitulo_style))
+        
+        # Dados do cabeçalho
+        dados_cabecalho = [
+            ['Número PS:', f"{str(ps.numPS).zfill(2)}/{ps.anoPS}"],
+            ['Embarcação:', ps.BarcoPS],
+            ['Período:', f"{ps.dataInicio.strftime('%d/%m/%Y')} a {ps.dataFim.strftime('%d/%m/%Y')}"],
+            ['Data Emissão:', ps.dataEmissaoPS.strftime('%d/%m/%Y')],
+            ['Fretadora:', f"{barco.emprNav} (ICJ: {barco.icjEmprNav})"],
+            ['Empresa Serviços:', f"{barco.emprServ} (ICJ: {barco.icjEmprServ})"],
+        ]
+        
+        # Adicionar dados dos fiscais
+        if fiscal_emb_dados:
+            fiscal_emb_texto = f"{fiscal_emb_dados.chave} - {fiscal_emb_dados.nome}"
+            if fiscal_emb_dados.celular:
+                fiscal_emb_texto += f" - Telefone: {fiscal_emb_dados.celular}"
+            dados_cabecalho.append(['Fiscal Embarcando:', fiscal_emb_texto])
+        else:
+            dados_cabecalho.append(['Fiscal Embarcando:', ps.fiscalEmb or 'Não informado'])
+        
+        if fiscal_des_dados:
+            fiscal_des_texto = f"{fiscal_des_dados.chave} - {fiscal_des_dados.nome}"
+            if fiscal_des_dados.celular:
+                fiscal_des_texto += f" - Telefone: {fiscal_des_dados.celular}"
+            dados_cabecalho.append(['Fiscal Desembarcando:', fiscal_des_texto])
+        else:
+            dados_cabecalho.append(['Fiscal Desembarcando:', ps.fiscalDes or 'Não informado'])
+        
+        tabela_cabecalho = Table(dados_cabecalho, colWidths=[40*mm, 130*mm])
+        tabela_cabecalho.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (0, -1), colors.HexColor('#e0ece8')),
+            ('TEXTCOLOR', (0, 0), (0, -1), colors.HexColor('#0b7a66')),
+            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+            ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+            ('FONTNAME', (1, 0), (1, -1), 'Helvetica'),
+            ('FONTSIZE', (0, 0), (-1, -1), 10),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('LEFTPADDING', (0, 0), (-1, -1), 5),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 5),
+        ]))
+        
+        elements.append(tabela_cabecalho)
+        elements.append(Spacer(1, 20))
+        
+        # SEÇÃO 1: PORTO
+        secao_style = ParagraphStyle(
+            'SecaoStyle',
+            parent=styles['Heading2'],
+            fontSize=14,
+            textColor=colors.HexColor('#0b7a66'),
+            spaceAfter=10
+        )
+        
+        elements.append(Paragraph("1. PORTO", secao_style))
+        elements.append(Spacer(1, 10))
+        
+        # 1.1 Troca de Turma
+        elements.append(Paragraph("1.1 TROCA DE TURMA", styles['Heading3']))
+        if troca_turma:
+            dados_tt = [
+                ['Porto:', troca_turma.Porto or ''],
+                ['Terminal:', troca_turma.Terminal or ''],
+                ['OS:', troca_turma.OrdSerPorto or ''],
+                ['Atracação:', troca_turma.AtracPorto.strftime('%H:%M') if troca_turma.AtracPorto else ''],
+                ['Duração (h):', troca_turma.DuracPorto or ''],
+            ]
+            if troca_turma.ObservPorto:
+                dados_tt.append(['Observações:', troca_turma.ObservPorto])
+            
+            tabela_tt = Table(dados_tt, colWidths=[40*mm, 130*mm])
+            tabela_tt.setStyle(TableStyle([
+                ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+                ('BACKGROUND', (0, 0), (0, -1), colors.HexColor('#f0f0f0')),
+                ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (-1, -1), 9),
+                ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+            ]))
+            elements.append(tabela_tt)
+        elements.append(Spacer(1, 15))
+        
+        # 1.2 Manutenção Preventiva
+        elements.append(Paragraph("1.2 MANUTENÇÃO PREVENTIVA", styles['Heading3']))
+        if manut_prev and manut_prev.prevManPrev:
+            dados_mp = [
+                ['Franquia (min):', str(manut_prev.Franquia)],
+                ['Saldo Franquia (min):', str(manut_prev.SaldoFranquia)],
+                ['OS:', manut_prev.OrdSerManutPrev or ''],
+            ]
+            if manut_prev.Rade:
+                dados_mp.append(['Anexo RADE:', manut_prev.Rade.name.split('/')[-1]])
+            if manut_prev.ObservManPrev:
+                dados_mp.append(['Observações:', manut_prev.ObservManPrev])
+            
+            tabela_mp = Table(dados_mp, colWidths=[40*mm, 130*mm])
+            tabela_mp.setStyle(TableStyle([
+                ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+                ('BACKGROUND', (0, 0), (0, -1), colors.HexColor('#f0f0f0')),
+                ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (-1, -1), 9),
+                ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+            ]))
+            elements.append(tabela_mp)
+        else:
+            elements.append(Paragraph("[X] Não Previsto", styles['Normal']))
+        elements.append(Spacer(1, 15))
+        
+        # 1.3 Abastecimento
+        elements.append(Paragraph("1.3 ABASTECIMENTO", styles['Heading3']))
+        if abastecimento and abastecimento.prevAbast:
+            dados_ab = []
+            if abastecimento.OrdSerAbast:
+                dados_ab.append(['OS:', abastecimento.OrdSerAbast])
+            if abastecimento.DataHoraPrevAbast:
+                dados_ab.append(['Previsão Início:', abastecimento.DataHoraPrevAbast.strftime('%d/%m/%Y %H:%M')])
+            if abastecimento.QuantAbast:
+                dados_ab.append(['Quantidade (m³):', str(abastecimento.QuantAbast)])
+            if abastecimento.DuracPrev:
+                dados_ab.append(['Duração Prevista (h):', str(abastecimento.DuracPrev)])
+            if abastecimento.UltAbast:
+                dados_ab.append(['Último Abastecimento:', abastecimento.UltAbast.strftime('%d/%m/%Y')])
+            if abastecimento.QuantUltAbast:
+                dados_ab.append(['Qtd. Último Abast. (m³):', str(abastecimento.QuantUltAbast)])
+            if abastecimento.Anexos:
+                dados_ab.append(['Anexo:', abastecimento.Anexos.name.split('/')[-1]])
+            if abastecimento.ObservAbast:
+                dados_ab.append(['Observações:', abastecimento.ObservAbast])
+            
+            if dados_ab:
+                tabela_ab = Table(dados_ab, colWidths=[40*mm, 130*mm])
+                tabela_ab.setStyle(TableStyle([
+                    ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+                    ('BACKGROUND', (0, 0), (0, -1), colors.HexColor('#f0f0f0')),
+                    ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+                    ('FONTSIZE', (0, 0), (-1, -1), 9),
+                    ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+                ]))
+                elements.append(tabela_ab)
+        else:
+            elements.append(Paragraph("[X] Não Previsto", styles['Normal']))
+        elements.append(Spacer(1, 15))
+        
+        # 1.4 Inspeções Normativas
+        elements.append(Paragraph("1.4 INSPEÇÕES NORMATIVAS", styles['Heading3']))
+        if insp_norm and insp_norm.prevInsNorm and itens_insp_norm:
+            dados_in = [['DESCRIÇÃO', 'OS']]
+            for item in itens_insp_norm:
+                dados_in.append([item['DescInspNorm'], item['OrdSerInspNorm']])
+            
+            tabela_in = Table(dados_in, colWidths=[85*mm, 85*mm])
+            tabela_in.setStyle(TableStyle([
+                ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+                ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#e0ece8')),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.HexColor('#0b7a66')),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (-1, -1), 9),
+                ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
+                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ]))
+            elements.append(tabela_in)
+            
+            if insp_norm.ObservInspNorm:
+                elements.append(Spacer(1, 5))
+                elements.append(Paragraph(f"<b>Observações:</b> {insp_norm.ObservInspNorm}", styles['Normal']))
+        else:
+            elements.append(Paragraph("[X] Não Previsto", styles['Normal']))
+        elements.append(Spacer(1, 15))
+        
+        # 1.5 Inspeções Petrobras
+        elements.append(Paragraph("1.5 INSPEÇÕES VISITAS E AUDITORIAS PETROBRAS", styles['Heading3']))
+        if insp_petr and insp_petr.prevInspPetr and itens_insp_petr:
+            dados_ip = [['DESCRIÇÃO', 'AUDITOR/VISITANTE', 'GERÊNCIA']]
+            for item in itens_insp_petr:
+                dados_ip.append([
+                    item['DescInspPetr'],
+                    item['auditorPetr'],
+                    item['gerAuditorPetr']
+                ])
+            
+            tabela_ip = Table(dados_ip, colWidths=[57*mm, 57*mm, 56*mm])
+            tabela_ip.setStyle(TableStyle([
+                ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+                ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#e0ece8')),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.HexColor('#0b7a66')),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (-1, -1), 9),
+                ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
+                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ]))
+            elements.append(tabela_ip)
+            
+            if insp_petr.ObservInspPetr:
+                elements.append(Spacer(1, 5))
+                elements.append(Paragraph(f"<b>Observações:</b> {insp_petr.ObservInspPetr}", styles['Normal']))
+        else:
+            elements.append(Paragraph("[X] Não Previsto", styles['Normal']))
+        elements.append(Spacer(1, 15))
+        
+        # 1.6 Embarque de Equipes
+        elements.append(Paragraph("1.6 EMBARQUE DE EQUIPES", styles['Heading3']))
+        if emb_equip and emb_equip.prevEmbEquip and itens_emb_equip:
+            dados_ee = [['DESCRIÇÃO', 'NOME', 'FUNÇÃO', 'EMPRESA']]
+            for item in itens_emb_equip:
+                dados_ee.append([
+                    item['DescEmbEquip'],
+                    item['equipNome'],
+                    item['equipFuncao'],
+                    item['equipEmpre']
+                ])
+            
+            tabela_ee = Table(dados_ee, colWidths=[40*mm, 45*mm, 40*mm, 45*mm])
+            tabela_ee.setStyle(TableStyle([
+                ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+                ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#e0ece8')),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.HexColor('#0b7a66')),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (-1, -1), 9),
+                ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
+                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ]))
+            elements.append(tabela_ee)
+            
+            if emb_equip.ObservEmbEquip:
+                elements.append(Spacer(1, 5))
+                elements.append(Paragraph(f"<b>Observações:</b> {emb_equip.ObservEmbEquip}", styles['Normal']))
+        else:
+            elements.append(Paragraph("[X] Não Previsto", styles['Normal']))
+        
+        # Construir PDF
+        doc.build(elements)
+        
+        # Salvar caminho no banco
+        ps.pdfPath = caminho_relativo
+        ps.save()
+        
+        print(f"[PDF] PDF gerado com sucesso: {caminho_relativo}")
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'PDF gerado com sucesso',
+            'pdfPath': caminho_relativo
+        })
+        
+    except Exception as e:
+        print(f"[PDF ERROR] Erro ao gerar PDF: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=500)
 
 
 
