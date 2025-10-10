@@ -356,7 +356,55 @@ class subTabPortoEmbEquip(models.Model):
     def __str__(self):
         return f"{self.idxSubTabPortoEE} - {self.DescEmbEquip}"
 
-#=================================1.7 MODELO EMBARQUE MATERIAIS===============================================
+
+#=============================== =1.7 MODELO MOBILIZAÇÃO DESMOBILIZAÇÃO===============================================
+class PortoMobD(models.Model):
+    """Modelo para cadastro de Passagem de Serviço - Operações de Mobilização e desmobilização - Porto"""
+
+    idxPortoMobD = models.ForeignKey(PassServ, on_delete=models.CASCADE)
+    prevMobD = models.BooleanField(default=False, verbose_name='Mobilização ou Desmobilização?')
+    ObservMobD = models.TextField(max_length=500, verbose_name='Observações', blank=True)
+    
+    class Meta:
+        verbose_name = 'MObilização e Desmobilização - Porto'
+        verbose_name_plural = 'Mobilizações Desmobilizações - Portos'
+        ordering = ['idxPortoMobD__BarcoPS','-idxPortoMobD__numPS']  
+
+    def __str__(self):
+        return f"{self.idxPortoMobD} - {self.idxPortoMobD.numPS}"
+    
+#=============================== SUB TABELA OS MOBILIZAÇÃO DESMOBILIZAÇÃO===============================================
+class SubTabPortoMobD(models.Model):
+    """Modelo para cadastro de Passagem de Serviço - Operações de Mobilização e desmobilização - Porto"""
+
+    idxSubTabPortoMobD = models.ForeignKey(PassServ, on_delete=models.CASCADE)
+    
+    OsMobD = models.CharField(max_length=12,verbose_name='OS de Origem')
+    DescMobD = models.CharField(max_length=300, verbose_name='Descrição dada OS de Mobilização ou Desmobilização')
+        
+    class Meta:
+        verbose_name = 'MObilização e Desmobilização - Porto'
+        verbose_name_plural = 'Mobilizações Desmobilizações - Portos'
+        ordering = ['idxSubTabPortoMobD']  
+
+    def __str__(self):
+        return f"{self.idxSubTabPortoMobD} - {self.OsMobD}"
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ 
+#=================================1.8 MODELO EMBARQUE MATERIAIS===============================================
 class PortoEmbMat(models.Model):
     """Modelo para cadastro de Passagem de Serviço - Embarque de Materiais - porto"""
 
@@ -406,7 +454,7 @@ class subTabPortoEmbMat(models.Model):
     def __str__(self):
         return f"{self.tipoMatEmb} - {self.RtEmbMat}"
 
-#=================================1.8 MODELO DESEMBARQUE MATERIAIS===============================================
+#=================================1.9 MODELO DESEMBARQUE MATERIAIS===============================================
 class PortoDesMat(models.Model):
     """Modelo para cadastro de Passagem de Serviço - Desembarque de Materiais - porto"""
 
@@ -429,26 +477,20 @@ class PortoDesMat(models.Model):
     def __str__(self):
         return f"{self.idxPortoDM} - {self.RtDesMat}"
 
-#=============================== =1.9 MODELO MOBILIZAÇÃO DESMOBILIZAÇÃO===============================================
-class PortoMobD(models.Model):
-    """Modelo para cadastro de Passagem de Serviço - Operações de Mobilização e desmobilização - Porto"""
 
-    idxPortoMobD = models.ForeignKey(PassServ, on_delete=models.CASCADE)
 
-    prevMobD = models.BooleanField(default=False, verbose_name='Mobilização ou Desmobilização?')
 
-    OsMobD = models.CharField(max_length=12,verbose_name='OS de Origem')
-    ObservMobD = models.TextField(max_length=500, verbose_name='Observações', blank=True)
-    
-    class Meta:
-        verbose_name = 'MObilização e Desmobilização - Porto'
-        verbose_name_plural = 'Mobilizações Desmobilizações - Portos'
-        ordering = ['idxPortoMobD__BarcoPS','-idxPortoMobD__numPS']  
 
-    def __str__(self):
-        return f"{self.idxPortoMobD} - {self.OsMobD}"
- 
+
+
+
+
+
+
 #================================2.0 MODELO ANOMALIAS E CORRENCIAS DE SMS===========================================
+
+
+
 class anocSMS(models.Model):
     """Modelo para cadastro de Passagem de Serviço - Anomalias e Ocorrencias de SMS"""
 

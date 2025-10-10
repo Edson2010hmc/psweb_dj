@@ -20,8 +20,10 @@ from .models import PortoManutPrev
 from .models import PortoAbast
 from .models import PortoInspNorm,subTabPortoInspNorm
 from .models import PortoInspPetr,subTabPortoInspPetr
-from .models import PortoEmbMat,subTabPortoEmbMat
 from .models import PortoEmbEquip,subTabPortoEmbEquip
+from .models import PortoMobD,SubTabPortoMobD
+
+
 #===============================================RENDERIZA TELA PRINCIPAL=================================================
 def index(request):
     """Renderiza a página principal"""
