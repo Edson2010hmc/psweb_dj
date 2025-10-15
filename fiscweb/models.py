@@ -377,7 +377,7 @@ class PortoMobD(models.Model):
 class SubTabPortoMobD(models.Model):
     """Modelo para cadastro de Passagem de Serviço - Operações de Mobilização e desmobilização - Porto"""
 
-    idxSubTabPortoMobD = models.ForeignKey(PassServ, on_delete=models.CASCADE)
+    idxSubTabPortoMobD = models.ForeignKey(PortoMobD, on_delete=models.CASCADE)
     
     OsMobD = models.CharField(max_length=12,verbose_name='OS de Origem')
     DescMobD = models.CharField(max_length=300, verbose_name='Descrição dada OS de Mobilização ou Desmobilização')

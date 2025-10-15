@@ -164,6 +164,10 @@ async function criarNovaPS(barcoId, barcoData) {
     if (typeof EmbEquipModule !== 'undefined' && EmbEquipModule.limpar) {
       EmbEquipModule.limpar();
     }
+    if (typeof MobDesmModule !== 'undefined' && MobDesmModule.limpar) {
+      MobDesmModule.limpar();
+    }
+
 
     // 5. Fechar modal e guardar ID
     psAtualId = createResult.data.id;
@@ -231,34 +235,31 @@ if (!window.btnFinalizarConfigurado) {
   window.btnFinalizarConfigurado = true;
 }
 
-// Carregar modulo Troca de Turma
+// Carregar modulos
 if (typeof TrocaTurmaModule !== 'undefined' && TrocaTurmaModule.carregarDados) {
   TrocaTurmaModule.carregarDados(psData.id);
 }
-
-// Carregar Modulo Manutenção Preventiva
 if (typeof ManutPrevModule !== 'undefined' && ManutPrevModule.carregarDados) {
   ManutPrevModule.carregarDados(psData.id);
 }
-
-// Carregar Modulo Abastecimento
 if (typeof AbastModule !== 'undefined' && AbastModule.carregarDados) {
   AbastModule.carregarDados(psData.id);
 }
-
-if (typeof EmbEquipModule !== 'undefined' && EmbEquipModule.carregarDados) {
-  EmbEquipModule.carregarDados(psData.id);
-}
-
-// Carregar modulo Inspeção Normativa
 if (typeof InspNormModule !== 'undefined' && InspNormModule.carregarDados) {
   InspNormModule.carregarDados(psData.id);
 }
-
-// Carregar Inspeção Petrobras
 if (typeof InspPetrModule !== 'undefined' && InspPetrModule.carregarDados) {
   InspPetrModule.carregarDados(psData.id);
 }
+if (typeof EmbEquipModule !== 'undefined' && EmbEquipModule.carregarDados) {
+  EmbEquipModule.carregarDados(psData.id);
+}
+// Carregar módulo Mobilização/Desmobilização
+if (typeof MobDesmModule !== 'undefined' && MobDesmModule.carregarDados) {
+  MobDesmModule.carregarDados(psData.id);
+}
+
+
 // Verificar se PS está finalizada
 verificarPSFinalizada(psData);
 
@@ -465,6 +466,11 @@ async function salvarRascunho(psId, silencioso = false) {
     // Salvar Embarque de Equipes
     if (typeof EmbEquipModule !== 'undefined' && EmbEquipModule.salvar) {
       await EmbEquipModule.salvar();
+    }
+
+    // Salvar módulo Mobilização/Desmobilização
+    if (typeof MobDesmModule !== 'undefined' && MobDesmModule.salvar) {
+      await MobDesmModule.salvar();
     }
 
     const response = await fetch(`/api/passagens/${psId}/`, {

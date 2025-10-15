@@ -67,6 +67,15 @@ urlpatterns = [
     path('api/emb-equip/<int:emb_equip_id>/subtab/', views.subtab_emb_equip_list, name='subtab_emb_equip_list'),
     path('api/emb-equip-item/<int:item_id>/', views.subtab_emb_equip_detail, name='subtab_emb_equip_detail'),
 
+# API Mobilização/Desmobilização (Principal e subtabelas)
+    path('api/ps/<int:ps_id>/mob-desm/', views.porto_mob_desm_list, name='porto_mob_desm_list'),
+    path('api/mob-desm/<int:mob_desm_id>/', views.porto_mob_desm_detail, name='porto_mob_desm_detail'),
+    path('api/mob-desm/<int:mob_desm_id>/subtab/', views.subtab_mob_desm_list, name='subtab_mob_desm_list'),
+    path('api/mob-desm-item/<int:item_id>/', views.subtab_mob_desm_detail, name='subtab_mob_desm_detail'),
+
+
+
+
 # API Finalizar Passagem de Serviço
     path('api/passagens/<int:ps_id>/finalizar/', views.finalizar_passagem, name='finalizar_passagem'),   
 

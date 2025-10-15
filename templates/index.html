@@ -372,6 +372,7 @@
   </div>
 </div>
 
+
 <!-- 1.7 OS Mobilização/Desmobilização -->
 <div class="accordion-item">
   <div class="accordion-header" data-target="osmobdesm">
@@ -383,15 +384,37 @@
       <label style="display:inline-flex;align-items:center;gap:6px;white-space:nowrap;margin-bottom:8px;">
         <input id="omNaoPrevisto" type="checkbox"> Não previsto para esse porto
       </label>
-    </div>
-    <table id="tblOM">
-      <thead>
-        <tr><th>OS</th><th>Descrição</th><th>Observações</th><th>Anexo</th><th></th></tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-    <div class="row">
-      <div class="col"><button id="btnAddOM" class="btn secondary">Adicionar linha</button></div>
+      
+      <div id="containerSubtabelaMobD" style="display:block;">
+        <div style="display:flex; gap:12px; align-items:flex-start; margin-bottom:12px;">
+          <div style="flex:0 0 auto;">
+            <label>OS</label>
+            <input id="mobDOS" type="text" maxlength="12" style="width:160px;">
+          </div>
+          <div style="flex:0 0 auto;">
+            <label>Descrição</label>
+            <input id="mobDDesc" type="text" maxlength="300" style="width:400px;">
+          </div>
+          <div style="flex:0 0 auto; margin-top:20px;">
+            <button id="btnAddMobD" class="btn small">Adicionar</button>
+          </div>
+        </div>
+        
+        <table id="tblMobD" style="width:100%; border-collapse:collapse; margin-bottom:12px;">
+          <thead>
+            <tr style="background:#f0f0f0;">
+              <th style="border:1px solid #ddd; padding:8px; text-align:left;">OS</th>
+              <th style="border:1px solid #ddd; padding:8px; text-align:left;">Descrição</th>
+              <th style="border:1px solid #ddd; padding:8px; text-align:center; width:100px;">Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+          </tbody>
+        </table>
+      </div>
+      
+      <label>Observações</label>
+      <textarea id="omObs" maxlength="4000" rows="8" style="width:100%;resize:vertical;overflow:auto;"></textarea>
     </div>
   </div>
 </div>
@@ -653,7 +676,8 @@
  <script src="/static/js/abast.js"></script>
  <script src="/static/js/insp-norm.js"></script>
  <script src="/static/js/insp-petr.js"></script>
- <script src="/static/js/emb-equip.js"></script> 
+ <script src="/static/js/emb-equip.js"></script>
+ <script src="/static/js/mob-desm.js"></script> 
  <script src="/static/js/app.js"></script>
 </body>
 </html>

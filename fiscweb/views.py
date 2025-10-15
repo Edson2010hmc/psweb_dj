@@ -2596,6 +2596,295 @@ def subtab_emb_equip_detail(request, item_id):
 
 
 
+
+
+#================================================MOBILIZAÇÃO/DESMOBILIZAÇÃO - API REST=================================================
+@csrf_exempt
+@require_http_methods(["GET", "POST"])
+def porto_mob_desm_list(request, ps_id):
+    """
+    GET: Retorna mobilização/desmobilização de uma PS (se existir)
+    POST: Cria novo registro para uma PS
+    """
+    
+    try:
+        ps = PassServ.objects.get(id=ps_id)
+    except PassServ.DoesNotExist:
+        print(f"[API ERROR] PS ID {ps_id} não encontrada")
+        return JsonResponse({
+            'success': False,
+            'error': 'Passagem de Serviço não encontrada'
+        }, status=404)
+    
+    if request.method == 'GET':
+        try:
+            mob_desm = PortoMobD.objects.filter(idxPortoMobD=ps).first()
+            
+            if not mob_desm:
+                print(f"[API] GET /ps/{ps_id}/mob-desm/ - Nenhum registro encontrado")
+                return JsonResponse({
+                    'success': True,
+                    'data': None
+                })
+            
+            print(f"[API] GET /ps/{ps_id}/mob-desm/ - Retornando registro ID {mob_desm.id}")
+            
+            return JsonResponse({
+                'success': True,
+                'data': {
+                    'id': mob_desm.id,
+                    'prevMobD': mob_desm.prevMobD,
+                    'ObservMobD': mob_desm.ObservMobD
+                }
+            })
+            
+        except Exception as e:
+            print(f"[API ERROR] GET /ps/{ps_id}/mob-desm/ - {str(e)}")
+            return JsonResponse({
+                'success': False,
+                'error': str(e)
+            }, status=500)
+    
+    elif request.method == 'POST':
+        try:
+            mob_existente = PortoMobD.objects.filter(idxPortoMobD=ps).first()
+            if mob_existente:
+                print(f"[API ERROR] POST /ps/{ps_id}/mob-desm/ - Já existe registro para esta PS")
+                return JsonResponse({
+                    'success': False,
+                    'error': 'Já existe registro para esta PS'
+                }, status=400)
+            
+            print(f"[API] POST /ps/{ps_id}/mob-desm/ - Criando registro")
+            
+            mob_desm = PortoMobD.objects.create(
+                idxPortoMobD=ps,
+                prevMobD=True,
+                ObservMobD=''
+            )
+            
+            print(f"[API] POST /ps/{ps_id}/mob-desm/ - Registro criado com ID: {mob_desm.id}")
+            
+            return JsonResponse({
+                'success': True,
+                'message': 'Registro criado com sucesso',
+                'data': {
+                    'id': mob_desm.id,
+                    'prevMobD': mob_desm.prevMobD,
+                    'ObservMobD': mob_desm.ObservMobD
+                }
+            }, status=201)
+            
+        except Exception as e:
+            print(f"[API ERROR] POST /ps/{ps_id}/mob-desm/ - {str(e)}")
+            return JsonResponse({
+                'success': False,
+                'error': str(e)
+            }, status=400)
+
+@csrf_exempt
+@require_http_methods(["PUT", "DELETE"])
+def porto_mob_desm_detail(request, mob_desm_id):
+    """
+    PUT: Atualiza registro
+    DELETE: Remove registro
+    """
+    
+    try:
+        mob_desm = PortoMobD.objects.get(id=mob_desm_id)
+    except PortoMobD.DoesNotExist:
+        print(f"[API ERROR] Registro ID {mob_desm_id} não encontrado")
+        return JsonResponse({
+            'success': False,
+            'error': 'Registro não encontrado'
+        }, status=404)
+    
+    if request.method == 'PUT':
+        try:
+            data = json.loads(request.body)
+            
+            print(f"[API] PUT /mob-desm/{mob_desm_id}/ - Atualizando registro")
+            
+            mob_desm.prevMobD = data.get('prevMobD', mob_desm.prevMobD)
+            mob_desm.ObservMobD = data.get('ObservMobD', mob_desm.ObservMobD)
+            mob_desm.save()
+            
+            print(f"[API] PUT /mob-desm/{mob_desm_id}/ - Registro atualizado")
+            
+            return JsonResponse({
+                'success': True,
+                'message': 'Registro atualizado com sucesso',
+                'data': {
+                    'id': mob_desm.id,
+                    'prevMobD': mob_desm.prevMobD,
+                    'ObservMobD': mob_desm.ObservMobD
+                }
+            })
+            
+        except Exception as e:
+            print(f"[API ERROR] PUT /mob-desm/{mob_desm_id}/ - {str(e)}")
+            return JsonResponse({
+                'success': False,
+                'error': str(e)
+            }, status=400)
+    
+    elif request.method == 'DELETE':
+        try:
+            mob_desm.delete()
+            
+            print(f"[API] DELETE /mob-desm/{mob_desm_id}/ - Registro removido")
+            
+            return JsonResponse({
+                'success': True,
+                'message': 'Registro removido com sucesso'
+            })
+            
+        except Exception as e:
+            print(f"[API ERROR] DELETE /mob-desm/{mob_desm_id}/ - {str(e)}")
+            return JsonResponse({
+                'success': False,
+                'error': str(e)
+            }, status=400)
+
+#================================================MOBILIZAÇÃO/DESMOBILIZAÇÃO - SUBTABELA - API REST=================================================
+@csrf_exempt
+@require_http_methods(["GET", "POST"])
+def subtab_mob_desm_list(request, mob_desm_id):
+    """
+    GET: Lista itens da subtabela
+    POST: Adiciona novo item à subtabela
+    """
+    
+    try:
+        mob_desm = PortoMobD.objects.get(id=mob_desm_id)
+    except PortoMobD.DoesNotExist:
+        print(f"[API ERROR] PortoMobD ID {mob_desm_id} não encontrado")
+        return JsonResponse({
+            'success': False,
+            'error': 'Registro não encontrado'
+        }, status=404)
+    
+    if request.method == 'GET':
+        try:
+            itens = SubTabPortoMobD.objects.filter(
+                idxSubTabPortoMobD=mob_desm
+            ).values('id', 'OsMobD', 'DescMobD')
+            
+            itens_list = list(itens)
+            
+            print(f"[API] GET /subtab-mob-desm/{mob_desm_id}/ - Retornando {len(itens_list)} itens")
+            
+            return JsonResponse({
+                'success': True,
+                'data': itens_list
+            })
+            
+        except Exception as e:
+            print(f"[API ERROR] GET /subtab-mob-desm/{mob_desm_id}/ - {str(e)}")
+            return JsonResponse({
+                'success': False,
+                'error': str(e)
+            }, status=500)
+    
+    elif request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            
+            print(f"[API] POST /subtab-mob-desm/{mob_desm_id}/ - Criando item")
+            
+            item = SubTabPortoMobD.objects.create(
+                idxSubTabPortoMobD=mob_desm,
+                OsMobD=data.get('OsMobD'),
+                DescMobD=data.get('DescMobD')
+            )
+            
+            print(f"[API] POST /subtab-mob-desm/{mob_desm_id}/ - Item criado com ID: {item.id}")
+            
+            return JsonResponse({
+                'success': True,
+                'message': 'Item adicionado com sucesso',
+                'data': {
+                    'id': item.id,
+                    'OsMobD': item.OsMobD,
+                    'DescMobD': item.DescMobD
+                }
+            }, status=201)
+            
+        except Exception as e:
+            print(f"[API ERROR] POST /subtab-mob-desm/{mob_desm_id}/ - {str(e)}")
+            return JsonResponse({
+                'success': False,
+                'error': str(e)
+            }, status=400)
+
+@csrf_exempt
+@require_http_methods(["PUT", "DELETE"])
+def subtab_mob_desm_detail(request, item_id):
+    """
+    PUT: Atualiza um item da subtabela
+    DELETE: Remove um item da subtabela
+    """
+    
+    try:
+        item = SubTabPortoMobD.objects.get(id=item_id)
+    except SubTabPortoMobD.DoesNotExist:
+        print(f"[API ERROR] Item ID {item_id} não encontrado")
+        return JsonResponse({
+            'success': False,
+            'error': 'Item não encontrado'
+        }, status=404)
+    
+    if request.method == 'PUT':
+        try:
+            data = json.loads(request.body)
+            
+            print(f"[API] PUT /subtab-mob-desm-item/{item_id}/ - Atualizando item")
+            
+            item.OsMobD = data.get('OsMobD', item.OsMobD)
+            item.DescMobD = data.get('DescMobD', item.DescMobD)
+            item.save()
+            
+            print(f"[API] PUT /subtab-mob-desm-item/{item_id}/ - Item atualizado")
+            
+            return JsonResponse({
+                'success': True,
+                'message': 'Item atualizado com sucesso',
+                'data': {
+                    'id': item.id,
+                    'OsMobD': item.OsMobD,
+                    'DescMobD': item.DescMobD
+                }
+            })
+            
+        except Exception as e:
+            print(f"[API ERROR] PUT /subtab-mob-desm-item/{item_id}/ - {str(e)}")
+            return JsonResponse({
+                'success': False,
+                'error': str(e)
+            }, status=400)
+    
+    elif request.method == 'DELETE':
+        try:
+            item.delete()
+            
+            print(f"[API] DELETE /subtab-mob-desm-item/{item_id}/ - Item removido")
+            
+            return JsonResponse({
+                'success': True,
+                'message': 'Item removido com sucesso'
+            })
+            
+        except Exception as e:
+            print(f"[API ERROR] DELETE /subtab-mob-desm-item/{item_id}/ - {str(e)}")
+            return JsonResponse({
+                'success': False,
+                'error': str(e)
+            }, status=400)
+
+
+
+
+
 #================================================FINALIZAR PASSAGEM DE SERVIÇO=================================================
 @csrf_exempt
 @require_http_methods(["PUT"])
